@@ -14,21 +14,21 @@ Matrix representation
 
 An example of a one-mode matrix. Note that the matrix has the same number of rows as columns (14)
 
-![Adjacency matrix](Figures%201.2/Matrix%202.1.png) An example of a two-mode matrix. Note that the number of rows (18) is different from the number of columns (14)
+![Adjacency matrix](Images/Matrix%202.1.png) An example of a two-mode matrix. Note that the number of rows (18) is different from the number of columns (14)
 
-![Two-mode matrix](Figures%201.2/Matrix%202.3.png)
+![Two-mode matrix](Images/Matrix%202.3.png)
 
 Graph representation
 --------------------
 
-![Directed network](Figures%201.2/Figure%202.1%20Borgatti.png) ![Multirelational network](Figures%201.2/Figure%202.2%20Borgatti.png)
+![Directed network](Images/Figure%202.1%20Borgatti.png) ![Multirelational network](Images/Figure%202.2%20Borgatti.png)
 
 Matrix algebra
 ==============
 
 Read 2.6 in Borgatti et al. C\[1,1\] is the value of the dot product of first row of A multiplied by the first column of B C\[2,2\] is the value of the dot product of the second row of A multiplied by the second column of B Matrix multiplication requires that the number of columns of the first matrix is the same as the number of rows of the second matrix.
 
-![matrix multiplication](Figures%201.2/Matrix%20multiplication.png) We can compute products of matrices with themselves. In a friendship matrix, the FF matrix is the friend of a friend relation. If we multiply the matrix by itself we get the friends of friends relation.
+![matrix multiplication](Images/Matrix%20multiplication.png) We can compute products of matrices with themselves. In a friendship matrix, the FF matrix is the friend of a friend relation. If we multiply the matrix by itself we get the friends of friends relation.
 
 ``` r
 #In the matrix F, person A (row 1) has a friendship tie to B, C and D.
@@ -92,7 +92,7 @@ Matrix multiplication: from two-mode to one-mode matrices
 
 We can use matrix multiplication to transform a two-mode matrix into a one-mode matrix A multiplied by transpose of A gives a row by row matrix transpose of A multiplied by A gives a column by column matrix Example of Breiger: person (letters) by event (numbers) matrix
 
-![Breiger Fictitious Data](Figures%201.2/Breiger_Figure%201.png)
+![Breiger Fictitious Data](Images/Breiger_Figure%201.png)
 
 ``` r
 #In the matrix F, person A (row 1) has a friendship tie to B, C and D.
@@ -158,17 +158,17 @@ Euclidian distance
 
 For a quick refresher on high school geometry look here: <https://towardsdatascience.com/the-euclidean-distance-is-just-the-pythagorean-theorem-2e672017d875>
 
-![Euclidian distance](Figures%201.2/Distance%20measures.png)
+![Euclidian distance](Images/Distance%20measures.png)
 
 Cosine similarity
 -----------------
 
-![Cosine similarity](Figures%201.2/Distance%20measures_cosine.png)
+![Cosine similarity](Images/Distance%20measures_cosine.png)
 
 Jaccard similarity
 ------------------
 
-![Jaccard](Figures%201.2/Distance%20measures_jaccard.png) Pearson correlation
+![Jaccard](Images/Distance%20measures_jaccard.png) \#\#Pearson correlation
 
 ``` r
 #distance and similarity measures
