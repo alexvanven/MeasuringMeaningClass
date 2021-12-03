@@ -153,13 +153,22 @@ Similarity and distance measures
 
 Matrix multiplication is one way to transform a two-mode matrix into a one-mode matrix. More generally, we can think of this transformation as a way to measure the similarities (or distances) between rows (or columns: now that we know about transposing the matrix this distinction becomes trivial). The example refers to a document-word matrix. In this matrix, the rows refer to documents (for example, newspaper articles) and the columns refer to words. The cell entries show the number of times each word occurs within that document.
 
-Euclidian distance For a quick refresher on high school geometry look here: <https://towardsdatascience.com/the-euclidean-distance-is-just-the-pythagorean-theorem-2e672017d875>
+Euclidian distance
+------------------
+
+For a quick refresher on high school geometry look here: <https://towardsdatascience.com/the-euclidean-distance-is-just-the-pythagorean-theorem-2e672017d875>
 
 ![Euclidian distance](Figures%201.2/Distance%20measures.png)
 
-Cosine similarity ![Cosine similarity](Figures%201.2/Distance%20measures_cosine.png)
+Cosine similarity
+-----------------
 
-Jaccard similarity ![Jaccard](Figures%201.2/Distance%20measures_jaccard.png) Pearson correlation
+![Cosine similarity](Figures%201.2/Distance%20measures_cosine.png)
+
+Jaccard similarity
+------------------
+
+![Jaccard](Figures%201.2/Distance%20measures_jaccard.png) Pearson correlation
 
 ``` r
 #distance and similarity measures

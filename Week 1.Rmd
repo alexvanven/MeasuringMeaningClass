@@ -17,16 +17,16 @@ For background reading consult Chapter 2 of Analyzing Social Networks by Borgatt
 An example of a one-mode matrix. 
 Note that the matrix has the same number of rows as columns (14)
 
-![Adjacency matrix](Figures 1.2/Matrix 2.1.png)
+![Adjacency matrix](Images/Matrix 2.1.png)
 An example of a two-mode matrix.
 Note that the number of rows (18) is different from the number of columns (14)
 
-![Two-mode matrix](Figures 1.2/Matrix 2.3.png)
+![Two-mode matrix](Images/Matrix 2.3.png)
 
 
 ## Graph representation
-![Directed network](Figures 1.2/Figure 2.1 Borgatti.png)
-![Multirelational network](Figures 1.2/Figure 2.2 Borgatti.png)
+![Directed network](Images/Figure 2.1 Borgatti.png)
+![Multirelational network](Images/Figure 2.2 Borgatti.png)
 
 # Matrix algebra
 Read 2.6 in Borgatti et al.
@@ -34,7 +34,7 @@ C[1,1] is the value of the dot product of first row of A multiplied by the first
 C[2,2] is the value of the dot product of the second row of A multiplied by the second column of B
 Matrix multiplication requires that the number of columns of the first matrix is the same as the number of rows of the second matrix. 
 
-![matrix multiplication](Figures 1.2/Matrix multiplication.png)
+![matrix multiplication](Images/Matrix multiplication.png)
 We can compute products of matrices with themselves. In a friendship matrix, the FF matrix is the friend of a friend relation. 
 If we multiply the matrix by itself we get the friends of friends relation.
 
@@ -65,7 +65,7 @@ A multiplied by transpose of A gives a row by row matrix
 transpose of A multiplied by A gives a column by column matrix
 Example of Breiger: person (letters) by event (numbers) matrix
 
-![Breiger Fictitious Data](Figures 1.2/Breiger_Figure 1.png)
+![Breiger Fictitious Data](Images/Breiger_Figure 1.png)
 ```{r}
 #In the matrix F, person A (row 1) has a friendship tie to B, C and D.
 A=rbind(c(0,0,0,0,1),c(1,0,0,0,0),c(1,1,0,0,0),c(0,1,1,1,1),c(0,0,1,0,0),c(0,0,1,1,0)) 
@@ -86,17 +86,17 @@ Matrix multiplication is one way to transform a two-mode matrix into a one-mode 
 More generally, we can think of this transformation as a way to measure the similarities (or distances) between rows (or columns: now that we know about transposing the matrix this distinction becomes trivial).
 The example refers to a document-word matrix. In this matrix, the rows refer to documents (for example, newspaper articles) and the columns refer to words. The cell entries show the number of times each word occurs within that document.
 
-Euclidian distance
+##Euclidian distance
 For a quick refresher on high school geometry look here: https://towardsdatascience.com/the-euclidean-distance-is-just-the-pythagorean-theorem-2e672017d875 
 
-![Euclidian distance](Figures 1.2/Distance measures.png)
+![Euclidian distance](Images/Distance measures.png)
 
-Cosine similarity
-![Cosine similarity](Figures 1.2/Distance measures_cosine.png)
+##Cosine similarity
+![Cosine similarity](Images/Distance measures_cosine.png)
 
-Jaccard similarity 
-![Jaccard](Figures 1.2/Distance measures_jaccard.png)
-Pearson correlation 
+##Jaccard similarity 
+![Jaccard](Images/Distance measures_jaccard.png)
+##Pearson correlation 
 
 ```{r}
 #distance and similarity measures
