@@ -104,10 +104,10 @@ distances(g,mode="in")
 
 ## Components
 
-The concept of paths is important for defining another key concept in describing networks: components. A component is defined as the maximal set of nodes in which every node can reach every other node by some path. 
+The concept of paths is important for defining another key concept in describing networks: components. A component is defined as the maximal set of nodes in which every node can reach every other node by some path. A strong component takes the directionality into account. Weak components ignore directionality.
 
 ```{r}
-#find the number of strong components. strong components take direction into account
+#find the number of strong components.
 g.components <- components(g, mode = "strong")
 print(g.components)
 
@@ -124,25 +124,14 @@ vertex_attr(g)
 plot(g,edge.arrow.size=.4,layout=layout_with_kk,main="campnet dataset with components",vertex.color=vertex_attr(g)$components)
 ```
 
-
-
-```{r}
-#to illustrate the discussion of matrix multiplication in 2.6 of Borgatti et al., we need to transform the igraph
-#object back to a matrix object
-#this next line converts the igraph object to a regular matrix
-g_matrix <- get.adjacency(g_undirected,sparse=FALSE)
-class(g_matrix)
-print(g_matrix)
-#matrix multiplication by itself to get number of walks of length 2 between i and j
-g_matrix%*%g_matrix
-#matrix multiplication to third power to get number of walks of length 3 between i and j
-g_matrix%*%g_matrix%*%g_matrix
-g_matrix%*%g_matrix%*%g_matrix%*%g_matrix
-```
+Check what happens when you choose "weak" components. How many components do you get?  
 
 # Whole Network Measures
 
+Whole network measures give one number that measures a property of a whole network. 
+
 ## Density
+Density is a measure for the "cohesion" of the network. It is simply the number of ties divided by the number of possible ties.
 ```{r}
 #measure the density. 
 graph.density(g)
@@ -157,12 +146,30 @@ Find density in subgroups:
 g.women <- induced_subgraph(g, V(g)$Gender == 1)
 #we can also plot only the women in the network
 plot(g.women,edge.arrow.size=.2,layout=layout_with_kk,main="campnet dataset women",vertex.color=vertex_attr(g.women)$Gender)
-#density among women. should be 0.357.
+#density among women. should be 0.357. cf. Table 9.1
 graph.density(g.women)
-#density among men. should be 0.278.
+#density among men. should be 0.278. cf. Table 9.1
 g.men <- induced_subgraph(g, V(g)$Gender == 2)
 plot(g.men,edge.arrow.size=.2,layout=layout_with_kk,main="campnet dataset men",vertex.color=vertex_attr(g.men)$Gender)
 graph.density(g.men)
+```
+
+## Component ratio
+The number of components in a network is also a measure of the whole network structure. If there are many components then this indicates that the network is "disconnected". Just taking the number of components, however, makes it hard to compare different networks on this measure. Therefore we normalize this measure by dividing it by the number of nodes in the network, or more accurately: C-1 / n-1 (where C is the number of components, and n is the number of nodes). It is 1 when all nodes are isolates and 0 when there is just one component. 
+
+```{r}
+component_ratio <- (count_components(g,mode="strong")-1)/(vcount(g)-1)
+component_ratio
+```
+
+## Connectedness
+This measures the proportion of the pair of nodes that are located in the same component. So, for a network of size n, there are n*n-1 pairs. Connectedness then sums up the number of (non-reflexive) pairs and divides it by the number of pairs. 
+
+```{r}
+#Connectedness is not available in igraph. 
+csize <- g.components[[2]]
+class(csize)
+sum((csize-1)*csize)/(vcount(g)*(vcount(g)-1))
 ```
 
 ## Compactness
@@ -186,7 +193,7 @@ Compactness(g)
 ```
 
 ## Reciprocity
-If we do not want to include 0/0 pairs as reciprocated then mode is ratio.
+In directed networks, we can measure whether ties are reciprocated (or "symmetric"). Note that 0/0 pairs are also reciprocal ties (both nodes not having a tie with each other). If we do not want to include 0/0 pairs as reciprocated then mode is ratio.
 ```{r}
 #Reciprocity
 reciprocity(g,ignore.loops = TRUE,mode="ratio")
@@ -197,7 +204,7 @@ reciprocity(g,ignore.loops = TRUE,mode="ratio")
 #Transitivity 
 #overall graph clustering coefficient
 transitivity(g,type='average')
-#this is the weighted overall clustering coefficient on the undirected network, which is the same as the 9.4 formula in Borgatti, but for undirected networks. 
+#weighted overall clustering coefficient on the undirected network, which is the same as the 9.4 formula in Borgatti, but for undirected networks. 
 transitivity(g)
 ```
 
