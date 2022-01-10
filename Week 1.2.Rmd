@@ -362,7 +362,7 @@ class(campnet)
 If everything went well, it should say "data.frame". 
 
 ## The Igraph Package
-To visualize and analyse networks, we make use of specific packages. The first one we'll use is "igraph". To install the package, uncomment the first line below, and then call the package. 
+To visualize and analyse networks, we make use of specific packages that have been written in R. The first one we'll use is "igraph". To install the package, uncomment the first line below, and then call the package. 
 
 ```{r}
 #First we need to install the igraph package
@@ -387,8 +387,7 @@ print(g)
 g[]
 ```
 
-We can plot the network. The layout option indicates that we use the Kamada-Kawai layout. Alternative, you can use the Fruchterman Reingold algorithm, but the plot is not as clear. 
-Cf. the figure 2.3 in Borgatti.
+We can now plot the network. The layout option indicates that we use the Kamada-Kawai layout. Alternative, you can use the Fruchterman Reingold algorithm, but the plot is not as clear in this case. Cf. the figure 2.3 in Borgatti.
 
 ```{r}
 #plot with Kamada-Kawai layout
@@ -397,7 +396,7 @@ plot(g,edge.arrow.size=.4,layout=layout_with_kk,main="campnet dataset - kk")
 plot(g,edge.arrow.size=.4,layout=layout_with_fr,main="campnet dataset - fr")
 ```
 
-Nodes can also have attributes, in this case for example, the gender of the individuals. These attributes can be added to the network data. They are stored in the file "campattr.txt".  
+Nodes can also have attributes. In this case, for example, nodes have a gender variable as attribute. These attributes can be added to the network data. They are stored in the file "campattr.txt".  
 We can also load this data and add them to the network. This replicates figure 9.3 in Borgatti. 
 
 ```{r}
@@ -411,7 +410,7 @@ plot(g,edge.arrow.size=.4,layout=layout_with_kk,main="campnet dataset with gende
 
 Let's also import and plot a two-mode network. 
 
-As an example, we use the Davis dataset, which is one of the most re-analyzed two-mode datasets in network analysis. These data were collected by Davis et al. in the 1930s. They represent observed attendance at 14 social events by 18 Southern women. The result is a person-by-event matrix: cell (i,j) is 1 if person i attended social event j, and 0 otherwise. You can find the data set in the Github folder. It is called "davis.csv" and is also stored in an edgelist format.
+As an example, we use the Davis dataset, which is one of the most (re-)analyzed two-mode datasets in network analysis. These data were collected by Davis et al. in the 1930s. They represent observed attendance at 14 social events by 18 Southern women. The result is a person-by-event matrix: cell (i,j) is 1 if person i attended social event j, and 0 otherwise. You can find the data set in the Github folder. It is called "davis.csv" and is also stored in an edgelist format.
 
 ```{r}
 davis <- read.csv("Data/davis.csv", header=FALSE)

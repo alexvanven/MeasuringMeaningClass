@@ -73,7 +73,7 @@ plot(g_undirected,edge.arrow.size=.4,layout=layout_with_kk,main="campnet dataset
 g_undirected[]
 ```
 
-### Paths, trails, walks
+## Paths, trails, walks
 A key concept in graph theory is the notion of a path. This refers to the "route" that connects two nodes in a network. A path is a particular route, namely one that does not revisit the same node or edge twice. Paths are therefore different from "walks" and "trails". In "walks" bot nodes and edges can be repeated. 
 
 In the network below, 1->2->3->4->2->1->3 is a walk. 

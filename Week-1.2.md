@@ -42,13 +42,13 @@ This folder is where you should keep all of your data and R scripts for this pro
 Data structure
 --------------
 
-If you have done any kind of quantitative research, and have worked with SPSS, Stata or R, you are probably already familiar with the data structure depicted below. Each row represents a case (an individual, an organization, a country, etc.) and the columns are the variables (gender, job category, salary, etc.). The cells of the matrix then record the value of these variables for each case.
+If you have done any kind of quantitative research, and have worked with SPSS, Stata or R, you are probably already familiar with the data structure depicted below. Each row represents a case (an individual, an organization, a country, etc.) and the columns are the variables (gender, job category, salary, etc.). The cells of the matrix then record the value of these variables for each case. This format is often called attribute data.
 
 <img src="Images/Datamatrixspss.png" alt="Case/variable matrix" style="width:50.0%" />
 
-In this course we will work *relational* data instead of *attribute* data.
+In this course we will, however, work with *relational* data instead of *attribute* data.
 
-There are two important types of relational data structures: *one-mode* and *two-mode* data (also termed adjacency for one-mode and affiliation or incidence matrices for two-mode)
+There are two important types of relational data structures: *one-mode* and *two-mode* data (also termed adjacency for one-mode and affiliation or incidence matrices for two-mode).
 
 In a one-mode matrix, the row and columns refer to the same "entity": they could be persons, organizations, or words (as in semantic network analysis). In network analysis these are generally called 'nodes' or 'vertices' and the cells indicate whether a relation or a 'tie' or 'edge' (however that is defined) exists between two nodes. If we are only interested in whether there is a tie or not, then the cells contain either a 1 or a 0. In *valued* networks, the cells can also contain values that indicate, for example, the strength of a relationship.
 
@@ -72,7 +72,7 @@ Relational data can also be represented as a network graph. The circles are the 
 
 <img src="Images/Figure%202.1%20Borgatti.png" alt="Directed network" style="width:50.0%" />
 
-Next session, we will start with analysing these network structures. First, we want to practice with how to work with relational data in R.
+Next session, we will start with analysing these network structures. First, we want to practice working with relational data in R.
 
 Data structures and basic operations in R
 -----------------------------------------
@@ -134,7 +134,7 @@ matrix_data
     ## [4,]    1    1    1    1    1
     ## [5,]    0    0    0    0    0
 
-It first has split up the long vector into 5 rows. If we do "byrow" is FALSE we get:
+It has split up the long vector into 5 rows. If we do "byrow" is FALSE we get:
 
 ``` r
 matrix_data <- matrix(c(0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0), nrow = 5, ncol = 5, byrow=FALSE)
@@ -162,13 +162,13 @@ matrix_data
     ## [4,]    0    1    0    1    0
     ## [5,]    0    1    0    1    0
 
-Instead of "chopping up" one long vector into rows and columns, we can also first list a number of vectors and add them together
+Instead of "chopping up" one long vector into rows and columns, we can also list a number of vectors and add them together.
 
 ``` r
 #we define two vectors
 zero <-c(0,0,0,0,0) 
 one <- c(1,1,1,1,1)
-# this could also be done more quickly with the rep function which replicates the values in x a given number of times 
+#this could also be done more quickly with the rep function which replicates the values in x a given number of times 
 #zero <- rep(0,5)
 #one <- rep(1,5)
 #we then refer to those vectors within a vector, and define the matrix
@@ -223,7 +223,7 @@ print(adjacency)
     ## Olga      1    1      1    1  1
     ## Bo        0    0      0    0  0
 
-To make an *affiliation matrix* we would follow the same steps. Only the rows and columns are (often) not of similar length. And the names for rows and columns would be different.
+To make an *affiliation matrix* we would follow the same steps. The rows and columns are, in that case, (often) not of similar length. And the names for rows and columns would be different.
 
 ``` r
 zero <-c(0,0,0) 
@@ -241,16 +241,10 @@ print(affiliation)
 
 ### Data frames
 
-Data frames are another type of object in R. They are like SPSS or STATA files. We can transform a matrix into a data frame. The kinds of operations you can do on a data frame differ from matrices so you need to check the kind of object you are working with.
-We can also convert a matrix into a data.frame and vice versa. The class() function tells us what type of object we are working with.
+Data frames are another type of object in R. They are like SPSS or STATA files. We can transform a matrix into a data frame, and vice versa. The kinds of operations you can do on a data frame differ from matrices. So you need to check the kind of object you are working with. The class() function tells us what type of object we are working with.
 
 ``` r
-class(affiliation)
-```
-
-    ## [1] "matrix"
-
-``` r
+#define as dataframe
 affiliation_dataframe <- as.data.frame(affiliation)
 class(affiliation_dataframe)
 ```
@@ -258,12 +252,16 @@ class(affiliation_dataframe)
     ## [1] "data.frame"
 
 ``` r
+#define as matrix
 affiliation_matrix <- as.matrix(affiliation_dataframe)
+class(affiliation_matrix)
 ```
+
+    ## [1] "matrix"
 
 ### Indexing and counting rows and columns
 
-When we are working with a matrix, we might want to access or manipulate a single row or column at a time. To do so, we need to index a row or column. For both data frames and matrices we can use subscripting. For example, matrix\_data1\[,5\] tells R to return the fifth column while matrix\_data1\[1,\] tells R to return the first row. Finally, matrix\_data1\[1,2\] is the cell located in the first row of the second column.
+When we are working with a matrix, we might want to access or manipulate a single row or column at a time. To do so, we need to index a row or column. For both data frames and matrices we can use subscripting. For example, matrix\_data1\[,5\] tells R to return the fifth column while matrix\_data1\[1,\] tells R to return the first row. Matrix\_data1\[1,2\] is the cell located in the first row of the second column.
 
 ``` r
 adjacency
@@ -340,11 +338,11 @@ ncol(affiliation)
 Matrix algebra
 --------------
 
-Now that we have covered the basics of working with R, we need to familiarize ourselves with some matrix algebra, as this will be useful when doing relational data analysis.
+Now that we have covered the basics of working with R, we discuss some basic matrix algebra, as this will be useful when doing relational data analysis.
 
 ### Matrix transpose
 
-Often you will come across an operation which takes the *transpose* of a matrix. Transposing a matrix simply means making columns into rows and rows into columns. In R we do this with the t() command.
+One important operation is taking the *transpose* of a matrix. Transposing a matrix simply means making columns into rows and rows into columns. In R we do this with the t() command.
 
 Below we transpose a 6x4 matrix into a 4x6 matrix.
 
@@ -374,7 +372,11 @@ print(T_transpose)
 
 ### Matrix multiplication
 
-Matrices can be multiplied by each other. But this is done in a way that might not be familiar to you if you haven't done any linear algebra. Below is a graphical representation of how to multiply matrices. Matrix multiplication requires that the number of columns of the first matrix is the same as the number of rows of the second matrix. C\[1,1\] is the value of - what is called - the dot product of first row of A multiplied by the first column of B C\[2,2\] is the value of the dot product of the second row of A multiplied by the second column of B
+Matrices can be multiplied by each other. If you have ever done any linear algebra this will probably be familiar to you. If not, the figure below shows how to multiply matrices.
+
+C\[1,1\] is the value of - what is called - the dot product of first row of A multiplied by the first column of B. C\[2,2\] is the value of the dot product of the second row of A multiplied by the second column of B.
+
+Matrix multiplication requires that the number of columns of the first matrix is the same as the number of rows of the second matrix.
 
 <img src="Images/Matrix%20multiplication.png" alt="matrix multiplication" style="width:50.0%" />
 
@@ -409,19 +411,20 @@ print(FF)
     ## [4,]    1    2    1    3    0
     ## [5,]    1    0    1    0    1
 
-Another way to say this is that the FF matrix indicates the number of "walks" with length 2. We will discuss the difference between walks, trails and paths in the next session. Measuring compound relations with matrix multiplication will be important for understanding centrality measures.
+Another way to say this is that the FF matrix indicates the number of "walks" with length 2. Measuring compound relations with matrix multiplication will be important for understanding certain centrality measures.
 
 ### Matrix multiplication: from two-mode to one-mode matrices
 
-We can also use matrix multiplication to transform a two-mode matrix into a one-mode matrix. Let's say we have a two-mode matrix A. When we multiply this matrix with its own transpose, we get a one-mode matrix. More particularly, A multiplied by transpose of A gives the row by row matrix. The transpose of A multiplied by A gives the column by column matrix.
+We can also use matrix multiplication to transform a two-mode matrix into a one-mode matrix. When we multiply a matrix A with its own transpose, we get a one-mode matrix. More particularly, A multiplied by transpose of A gives the row by row matrix. The transpose of A multiplied by A gives the column by column matrix.
 
-This quite simple transformation was the basis of a classic article by Ronald Breiger "The Duality of Persons and Groups". The idea is that you can derive two networks from a two-mode network. In the case of a person by event network, you can derive a person-by-person networks, and an event-by-event network. They form a duality in that the relations among persons are derived from their co-participation in the same events, while the relations among events is derived from their overlap in members.
+This quite simple transformation was the basis of a classic article by Ronald Breiger "The Duality of Persons and Groups". The notion of "duality" or "mutual constitution" captures the idea is that you can derive two networks from a two-mode network. So, for example, in the case of a person by event network, you can derive a person-by-person networks, and an event-by-event network. They form a duality in that the relations among persons are derived from their co-participation in the same events, while the relations among events is derived from their overlap in members.
+
+This notion of duality in two-mode networks has been shown to be able to operationalize various dualities in social science, such as between culture and practice.
 
 <img src="Images/Breiger_Figure%201.png" alt="Breiger Fictitious Data" style="width:50.0%" />
 
 ``` r
-#We can do the calculations of Breigers fictitious data set by hand
-#We make the matrix
+#We can replicate the calculations by Breiger of the fictituous data 
 F=matrix(c(c(0,0,0,0,1),c(1,0,0,0,0),c(1,1,0,0,0),c(0,1,1,1,1),c(0,0,1,0,0),c(0,0,1,1,0)), nrow=6, ncol=5, byrow=TRUE,dimnames = list(c("A","B","C","D","E","F"),c("1","2","3","4","5"))) 
 print(F)
 ```
@@ -482,9 +485,9 @@ Importing data using Excel or csv files
 
 ### Edge lists
 
-Constructing matrices directly in R can be quite cumbersome. Especially for larger matrices, it would entail writing out long vectors of zero's and one's. Matrices can also get quite big, quite quickly, and it is therefore not very efficient to write them out in this manner. For storing network data, we therefore often use a different format: the edge list. For each edge, we just list who that edge is incident on. Edge lists are therefore two column matrices that directly tell the computer which actors are tied for each edge. In a directed graph, the actors in column "source"" are the sources of edges, and the actors in column "target" receive the tie. In an undirected graph, order doesn't matter.
+Constructing matrices directly in R can be quite cumbersome. Especially for larger matrices, it would entail writing out long vectors of (mostly) zero's and one's. Matrices can also get quite big, quite quickly, and it is therefore not very efficient to write them out in this manner. For *storing* network data, we therefore often use a different format: the edge list. For each edge, we list who that edge is incident on. Edge lists are therefore two column matrices that directly tell the computer which actors are tied for each edge. In a directed graph, the actors in column "source"" are the sources of edges, and the actors in column "target" receive the tie. In an undirected graph, order doesn't matter.
 
-In R, we can create an example edge list using vectors. I specify each column of the edge list with vectors and then assign them as the columns of a matrix. We can use this to visualize what an edge list should look like.
+To illustrate the idea of an edgelist, I create a short example directly in R. I specify each column of the edge list with vectors and then assign them as the columns of a matrix. We can use this to visualize what an edge list should look like.
 
 ``` r
 source <- c("Mark", "Mark", "Peter", "Peter", "Bob", "Jill")
@@ -507,25 +510,27 @@ In an edge list, the number of rows accords to the number of edges in the networ
 
 ### Creating data in Excel
 
-We often record data, not in R, but in Excel and then import that data into R. The easiest way to record relationships in Excel is as an edge list, which, as mentioned, is a two column matrix that lists the pairs of actors in a relationship.
+The easiest and (memory-) efficient way to record network data in Excel is as an edge list.
 
 Below I have created the edge list containing the campnet data set, which is also discussed in Borgatti. For more information on the data, see: <https://sites.google.com/site/ucinetsoftware/datasets/camp-data>
+
+You do not have to replicate this process. It is just to illustrate how to do it if you would want to create your own network data file.
 
 <img src="Images/Campnet_csv_figure.png" alt="Excel file" style="width:50.0%" />
 
 ### Saving Excel data as a .csv file
 
-Now we need to save this data in a format that R can easily read. These data files are generally saved in the .csv format, which (generally) separates values by commas, because R has a default function for reading .csv files.
+Now we need to save this data in a format that R can easily read. Most people generally save these files in the .csv format, which (generally) separates values by commas, because R has a default function for reading .csv files.
 
-To save an Excel sheet as a .csv file, in Excel go to "File -&gt; Save As..."
+To save an Excel sheet as a .csv file, in Excel go to "File -&gt; Save As..." and select the csv format.
 
 <img src="Images/Campnet_csv_figure_save.png" alt="Excel file" style="width:50.0%" />
 
 ### Loading data into R
 
-To use read.csv, we just tell R the name of the .csv file that we want it to read. It will then look inside the directory for that file.
+To use read.csv, we just tell R the name of the .csv file that we want it to read. It will then look inside the (working) directory for that file.
 
-If it can't find the file - either because you typed the wrong name or you never dragged it to the directory - it will return something like the following error:
+If it can't find the file - either because you typed the wrong name or you never dragged it to the (working) directory - it will return something like the following error:
 
 > Error in file(file, "rt") : cannot open the connection In addition: Warning message: In file(file, "rt") : cannot open file 'campnet.csv': No such file or directory
 
@@ -533,14 +538,16 @@ So be sure campnet.csv is in your working directory or project directory otherwi
 
 Another possible problem that might occur is that the delimiter is actually not a comma but a semicolon. If you open your csv file in the files pane below on the left you can check the raw file.
 
-If semicolons are used, your can read the data with read.csv2() or explicitly declare the delimiter with the sep= statement
+If semicolons are used, your can read the data with read.csv2() or explicitly declare the delimiter with the sep= statement. Check your file after it has been read into R to check whether it looks the way it should look.
+
+Also beware that on Windows computers the file path might have to be adjusted (using a  instead of a /).
 
 ``` r
 #for delimiter = comma
 #campnet <- read.csv("Data/campnet.csv")
 #for delimiter = semicolon
 campnet <- read.csv2("Data/campnet.csv")
-#set sep
+#or explicitly set seperator
 campnet <- read.csv("Data/campnet.csv", sep=";")
 ```
 
@@ -563,12 +570,12 @@ class(campnet)
 
     ## [1] "data.frame"
 
-If everything went well, you'll see that it says "data.frame".
+If everything went well, it should say "data.frame".
 
 The Igraph Package
 ------------------
 
-To visualize and analyse networks, we make use of specific packages. The first one we'll use is "igraph". To install the package, uncomment the first line below, and then call the package.
+To visualize and analyse networks, we make use of specific packages that have been written in R. The first one we'll use is "igraph". To install the package, uncomment the first line below, and then call the package.
 
 ``` r
 #First we need to install the igraph package
@@ -622,9 +629,9 @@ head(g)
 print(g)
 ```
 
-    ## IGRAPH 8434b76 DN-- 18 54 -- 
+    ## IGRAPH 6b76072 DN-- 18 54 -- 
     ## + attr: name (v/c)
-    ## + edges from 8434b76 (vertex names):
+    ## + edges from 6b76072 (vertex names):
     ##  [1] HOLLY  ->PAM     HOLLY  ->PAT     HOLLY  ->DON     BRAZEY ->LEE    
     ##  [5] BRAZEY ->STEVE   BRAZEY ->BERT    CAROL  ->PAM     CAROL  ->PAT    
     ##  [9] CAROL  ->PAULINE PAM    ->JENNIE  PAM    ->PAULINE PAM    ->ANN    
@@ -664,7 +671,7 @@ g[]
     ## BERT    . . . . . . . . . . 1 . . . . 1 . 1
     ## RUSS    . . . . . . . . . . . . . . 1 1 1 .
 
-We can plot the network. The layout option indicates that we use the Kamada-Kawai layout. Alternative, you can use the Fruchterman Reingold algorithm, but the plot is not as clear. Cf. the figure 2.3 in Borgatti.
+We can now plot the network. The layout option indicates that we use the Kamada-Kawai layout. Alternative, you can use the Fruchterman Reingold algorithm, but the plot is not as clear in this case. Cf. the figure 2.3 in Borgatti.
 
 ``` r
 #plot with Kamada-Kawai layout
@@ -680,7 +687,7 @@ plot(g,edge.arrow.size=.4,layout=layout_with_fr,main="campnet dataset - fr")
 
 ![](Week-1.2_files/figure-markdown_github/unnamed-chunk-26-2.png)
 
-Nodes can also have attributes, in this case for example, the gender of the individuals. These attributes can be added to the network data. They are stored in the file "campattr.txt".
+Nodes can also have attributes. In this case, for example, nodes have a gender variable as attribute. These attributes can be added to the network data. They are stored in the file "campattr.txt".
 We can also load this data and add them to the network. This replicates figure 9.3 in Borgatti.
 
 ``` r
@@ -696,7 +703,7 @@ plot(g,edge.arrow.size=.4,layout=layout_with_kk,main="campnet dataset with gende
 
 Let's also import and plot a two-mode network.
 
-As an example, we use the Davis dataset, which is one of the most re-analyzed two-mode datasets in network analysis. These data were collected by Davis et al. in the 1930s. They represent observed attendance at 14 social events by 18 Southern women. The result is a person-by-event matrix: cell (i,j) is 1 if person i attended social event j, and 0 otherwise. You can find the data set in the Github folder. It is called "davis.csv" and is also stored in an edgelist format.
+As an example, we use the Davis dataset, which is one of the most (re-)analyzed two-mode datasets in network analysis. These data were collected by Davis et al. in the 1930s. They represent observed attendance at 14 social events by 18 Southern women. The result is a person-by-event matrix: cell (i,j) is 1 if person i attended social event j, and 0 otherwise. You can find the data set in the Github folder. It is called "davis.csv" and is also stored in an edgelist format.
 
 ``` r
 davis <- read.csv("Data/davis.csv", header=FALSE)
