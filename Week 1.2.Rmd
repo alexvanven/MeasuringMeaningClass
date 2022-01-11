@@ -66,7 +66,7 @@ Note that the number of rows (18) is different from the number of columns (14). 
 ![Two-mode matrix](Images/Matrix 2.3.png){width=50%}
 
 ## Graph representation
-Relational data can also be represented as a network graph. The circles are the nodes, the lines connecting the nodes are the edges. In the example below, the network is directed, which is indicated by the arcs at the end of the edges. You can see that there is a link from B to C, but not from C to B. In the matrix representation of this network, there is a 1 in the cell value of row B/column C, but a zero in row C/column B. The adjacency matrix will therefore be asymmetric. 
+Relational data can also be represented as a network graph. The circles are the nodes, the lines connecting the nodes are the edges. In the example of Figure 2.1 in Borgatti, the network is directed, which is indicated by the arcs at the end of the edges. You can see that there is a link from B to C, but not from C to B. In the matrix representation of this network, there is a 1 in the cell value of row B/column C, but a zero in row C/column B. The adjacency matrix will therefore be asymmetric. 
 
 ![Directed network](Images/Figure_2.1_Borgatti.png){width=50%}
 

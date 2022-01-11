@@ -68,7 +68,7 @@ An example of a two-mode (affiliation or incidence) matrix. Note that the number
 Graph representation
 --------------------
 
-Relational data can also be represented as a network graph. The circles are the nodes, the lines connecting the nodes are the edges. In the example below, the network is directed, which is indicated by the arcs at the end of the edges. You can see that there is a link from B to C, but not from C to B. In the matrix representation of this network, there is a 1 in the cell value of row B/column C, but a zero in row C/column B. The adjacency matrix will therefore be asymmetric.
+Relational data can also be represented as a network graph. The circles are the nodes, the lines connecting the nodes are the edges. In the example of Figure 2.1 in Borgatti, the network is directed, which is indicated by the arcs at the end of the edges. You can see that there is a link from B to C, but not from C to B. In the matrix representation of this network, there is a 1 in the cell value of row B/column C, but a zero in row C/column B. The adjacency matrix will therefore be asymmetric.
 
 <img src="Images/Figure_2.1_Borgatti.png" alt="Directed network" style="width:50.0%" />
 
@@ -628,9 +628,9 @@ head(g)
 print(g)
 ```
 
-    ## IGRAPH f0eeac2 DN-- 18 54 -- 
+    ## IGRAPH 29df27d DN-- 18 54 -- 
     ## + attr: name (v/c)
-    ## + edges from f0eeac2 (vertex names):
+    ## + edges from 29df27d (vertex names):
     ##  [1] HOLLY  ->PAM     HOLLY  ->PAT     HOLLY  ->DON     BRAZEY ->LEE    
     ##  [5] BRAZEY ->STEVE   BRAZEY ->BERT    CAROL  ->PAM     CAROL  ->PAT    
     ##  [9] CAROL  ->PAULINE PAM    ->JENNIE  PAM    ->PAULINE PAM    ->ANN    
