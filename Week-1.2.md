@@ -468,17 +468,16 @@ print(P)
 ``` r
 #We multiple the transpose of the matrix by the original matrix to get the column-by-column network
 G=t(F) %*% F
-diag(F) <- 0
-print(F)
+diag(G) <- 0
+print(G)
 ```
 
     ##   1 2 3 4 5
-    ## A 0 0 0 0 1
-    ## B 1 0 0 0 0
-    ## C 1 1 0 0 0
-    ## D 0 1 1 0 1
-    ## E 0 0 1 0 0
-    ## F 0 0 1 1 0
+    ## 1 0 1 0 0 0
+    ## 2 1 0 1 1 1
+    ## 3 0 1 0 2 1
+    ## 4 0 1 2 0 1
+    ## 5 0 1 1 1 0
 
 Importing data using Excel or csv files
 ---------------------------------------
@@ -540,7 +539,7 @@ Another possible problem that might occur is that the delimiter is actually not 
 
 If semicolons are used, your can read the data with read.csv2() or explicitly declare the delimiter with the sep= statement. Check your file after it has been read into R to check whether it looks the way it should look.
 
-Also beware that on Windows computers the file path might have to be adjusted (using a  instead of a /).
+Also beware that on Windows computers the file path might have to be adjusted (using a '''' instead of a ''/'').
 
 ``` r
 #for delimiter = comma
@@ -629,9 +628,9 @@ head(g)
 print(g)
 ```
 
-    ## IGRAPH 6b76072 DN-- 18 54 -- 
+    ## IGRAPH 95ebe6b DN-- 18 54 -- 
     ## + attr: name (v/c)
-    ## + edges from 6b76072 (vertex names):
+    ## + edges from 95ebe6b (vertex names):
     ##  [1] HOLLY  ->PAM     HOLLY  ->PAT     HOLLY  ->DON     BRAZEY ->LEE    
     ##  [5] BRAZEY ->STEVE   BRAZEY ->BERT    CAROL  ->PAM     CAROL  ->PAT    
     ##  [9] CAROL  ->PAULINE PAM    ->JENNIE  PAM    ->PAULINE PAM    ->ANN    
