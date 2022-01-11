@@ -70,7 +70,7 @@ Graph representation
 
 Relational data can also be represented as a network graph. The circles are the nodes, the lines connecting the nodes are the edges. In the example below, the network is directed, which is indicated by the arcs at the end of the edges. You can see that there is a link from B to C, but not from C to B. In the matrix representation of this network, there is a 1 in the cell value of row B/column C, but a zero in row C/column B. The adjacency matrix will therefore be asymmetric.
 
-<img src="Images/Figure%202.1%20Borgatti.png" alt="Directed network" style="width:50.0%" />
+<img src="Images/Figure_2.1_Borgatti.png" alt="Directed network" style="width:50.0%" />
 
 Next session, we will start with analysing these network structures. First, we want to practice working with relational data in R.
 
@@ -628,9 +628,9 @@ head(g)
 print(g)
 ```
 
-    ## IGRAPH 22058a3 DN-- 18 54 -- 
+    ## IGRAPH f0eeac2 DN-- 18 54 -- 
     ## + attr: name (v/c)
-    ## + edges from 22058a3 (vertex names):
+    ## + edges from f0eeac2 (vertex names):
     ##  [1] HOLLY  ->PAM     HOLLY  ->PAT     HOLLY  ->DON     BRAZEY ->LEE    
     ##  [5] BRAZEY ->STEVE   BRAZEY ->BERT    CAROL  ->PAM     CAROL  ->PAT    
     ##  [9] CAROL  ->PAULINE PAM    ->JENNIE  PAM    ->PAULINE PAM    ->ANN    
