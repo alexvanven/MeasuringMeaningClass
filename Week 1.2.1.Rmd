@@ -1,0 +1,86 @@
+---
+title: "Measuring Meaning in Mixed Methods - Week 1"
+output:
+  github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Basic network analysis
+
+```{r}
+#last session we installed igraph so no need to do that again
+#install.packages("igraph")
+library(igraph)
+#be sure that the two files are in your R working directory and in the Data folder 
+#header = False because we don't have a name to the two columns
+campnet <- read.csv2("Data/campnet.csv", header=FALSE)
+#the attribute file contains information on the nodes such as their gender, their role. It also already includes a centrality measure (betweenness) but this will be calculated separately later on in the script. 
+#import the attribute file
+campattr <- read.csv("Data/campattr.txt")
+```
+
+We need to transform the data frame format into an igraph object to be able to use igraph's functions. We also add the attributes.  
+
+```{r}
+#as this is a directed network we set directed to TRUE
+g <- graph_from_data_frame(campnet, directed = TRUE, vertices = campattr)
+#look at the file format
+class(g)
+#now has become an igraph format
+```
+
+### Paths, trails, walks
+A key concept in graph theory is the notion of a path. This refers to the "route" that connects two nodes in a network. A path is a particular route, namely one that does not revisit the same node or edge twice. Paths are therefore different from "walks" and "trails". In "walks" both nodes and edges can be repeated. 
+
+In the network below, 1->2->3->4->2->1->3 is a walk. 
+
+![Walks](Images/walks.png){width=50%}
+
+Trails can revisit the same node, but not the same edge. So here, 1->3->8->6->3->2 is a trail. 
+
+![Trails](Images/trails.png){width=50%}
+
+As said, a path never revisits the same nodes or edges. So 6->8->3->1->2->4 is a path. 
+
+![Paths](Images/paths.png){width=50%}
+
+The shortest path between nodes is called a "geodesic". 
+
+To get the paths from Holly to the other nodes in the campnet network, we can list all paths from this node to all others. You can verify that, as mentioned by Borgatti (p.16), there is no path in the network from Holly to Brazey.
+
+```{r}
+all_simple_paths(g, "HOLLY", to = V(g), mode = c("out"))
+```
+
+We can get the geodesic distances between pairs of nodes (cf. matrix 2.2 in Borgatti). We take the directed graph and therefore add mode=out and mode=in
+```{r}
+distances(g,mode="out")
+distances(g,mode="in")
+```
+
+### Components
+
+The concept of paths is important for defining another key concept in describing networks: components. A component is defined as the maximal set of nodes in which every node can reach every other node by some path. A strong component takes the directionality into account. Weak components ignore directionality.
+
+```{r}
+#find the number of strong components.
+g.components <- components(g, mode = "strong")
+print(g.components)
+
+#the following line does the same thing but now just returns the number
+count_components(g, mode = c("strong"))
+
+#add attributes of component membership
+V(g)$components <- g.components$membership
+
+#examine attributes to check if it was added
+vertex_attr(g)
+
+#plot the graph with components
+plot(g,edge.arrow.size=.4,layout=layout_with_kk,main="campnet dataset with components",vertex.color=vertex_attr(g)$components)
+```
+
+Check what happens when you choose "weak" components. How many components do you get?  
