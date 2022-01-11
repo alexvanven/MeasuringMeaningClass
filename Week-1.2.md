@@ -539,7 +539,7 @@ Another possible problem that might occur is that the delimiter is actually not 
 
 If semicolons are used, your can read the data with read.csv2() or explicitly declare the delimiter with the sep= statement. Check your file after it has been read into R to check whether it looks the way it should look.
 
-Also beware that on Windows computers the file path might have to be adjusted (using a '''' instead of a ''/'').
+Also beware that on Windows computers the file path might have to be adjusted.
 
 ``` r
 #for delimiter = comma
@@ -628,9 +628,9 @@ head(g)
 print(g)
 ```
 
-    ## IGRAPH 95ebe6b DN-- 18 54 -- 
+    ## IGRAPH 22058a3 DN-- 18 54 -- 
     ## + attr: name (v/c)
-    ## + edges from 95ebe6b (vertex names):
+    ## + edges from 22058a3 (vertex names):
     ##  [1] HOLLY  ->PAM     HOLLY  ->PAT     HOLLY  ->DON     BRAZEY ->LEE    
     ##  [5] BRAZEY ->STEVE   BRAZEY ->BERT    CAROL  ->PAM     CAROL  ->PAT    
     ##  [9] CAROL  ->PAULINE PAM    ->JENNIE  PAM    ->PAULINE PAM    ->ANN    
