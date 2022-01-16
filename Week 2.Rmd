@@ -8,17 +8,18 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Week 2 Network analysis
-Topics: 
+# Week 2 Network analysis Session 1
+Topics:  
 - whole network measures  
 - centrality measures  
-- finding subgroups (TBA)  
-- structural equivalence and blockmodeling
+- finding subgroups  
 
 ## Importing data
 
+The following 3 steps are the same as last session. Just to be sure, we do them here again. 
+
 We are going to use the igraph package in R to analyze the campnet dataset discussed in Borgatti. 
-The dataset (campnet.csv) and attribute file (campattr.txt) are available from Github
+The dataset (campnet.csv) and attribute file (campattr.txt) can be downloaded from last week's Canvas module.
 For more information on the data, see: https://sites.google.com/site/ucinetsoftware/datasets/campdata
 
 ```{r}
@@ -43,9 +44,9 @@ class(g)
 #now has become an igraph format
 ```
 
-## Basic operations
+## Basic network analysis
 
-The graph representation of the network
+The graph representation of the network.
 
 ```{r}
 #we can plot the network with the kamada-kawai layout. 
@@ -55,7 +56,8 @@ plot(g,edge.arrow.size=.4,layout=layout_with_kk,main="campnet dataset")
 plot(g,edge.arrow.size=.4,layout=layout_with_kk,main="campnet dataset with gender",vertex.color=vertex_attr(g)$Gender)
 ```
 
-Count the number of nodes and edges
+We count the number of nodes and edges.
+
 ```{r}
 #we can  count the number of nodes
 vcount(g)
@@ -63,7 +65,7 @@ vcount(g)
 ecount(g)
 ```
 
-We can also make an undirected graph by "collapsing" the matrix and making it symmetric. 
+We also make an undirected version of the network  by "collapsing" the matrix and making it symmetric. 
 
 ```{r}
 #Change into an undirected network by collapsing
@@ -74,7 +76,7 @@ g_undirected[]
 ```
 
 ## Paths, trails, walks
-A key concept in graph theory is the notion of a path. This refers to the "route" that connects two nodes in a network. A path is a particular route, namely one that does not revisit the same node or edge twice. Paths are therefore different from "walks" and "trails". In "walks" bot nodes and edges can be repeated. 
+A key concept in graph theory is the notion of a path. This refers to the "route" that connects two nodes in a network. A path is a particular route, namely one that does not revisit the same node or edge twice. Paths are therefore different from "walks" and "trails". In "walks" both nodes and edges can be repeated. 
 
 In the network below, 1->2->3->4->2->1->3 is a walk. 
 
@@ -92,19 +94,26 @@ The shortest path between nodes is called a "geodesic".
 
 To get the paths from Holly to the other nodes in the campnet network, we can list all paths from this node to all others. You can verify that, as mentioned by Borgatti (p.16), there is no path in the network from Holly to Brazey.
 
-```{r}
+```{r,results=FALSE}
 all_simple_paths(g, "HOLLY", to = V(g), mode = c("out"))
 ```
 
-We can get the geodesic distances between pairs of nodes (cf. matrix 2.2 in Borgatti). We take the directed graph and therefore add mode=out and mode=in
+We can get the geodesic distances between pairs of nodes (cf. matrix 2.2 in Borgatti). We take the directed graph and therefore add mode=out and mode=in.
+
 ```{r}
 distances(g,mode="out")
 distances(g,mode="in")
+#if you do not define the directionality for a directed graph then it automatically assumes that the graph is undirected.
+distances(g)
 ```
 
 ## Components
 
-The concept of paths is important for defining another key concept in describing networks: components. A component is defined as the maximal set of nodes in which every node can reach every other node by some path. A strong component takes the directionality into account. Weak components ignore directionality.
+The concept of paths is important for defining another key concept in describing networks: components.  
+
+A component is defined as the maximal set of nodes in which every node can reach every other node by some path. 
+
+A strong component takes the directionality into account. Weak components ignore directionality.
 
 ```{r}
 #find the number of strong components.
@@ -128,60 +137,83 @@ Check what happens when you choose "weak" components. How many components do you
 
 # Whole Network Measures
 
-Whole network measures give one number that measures a property of a whole network. 
+Whole network measures measure a property of the whole network. Whole network measures thus give one number that characterizes the whole network. 
+
+Two basic classes of whole-networks are _cohesion_ measures and _shape_ measures. Cohesion measures assess the general connectivity of the network. Shape measures see whether the network approximates a certain shape, for example, exhibits "clumpiness", resembles a "star" or "core-periphery" network.
 
 ## Density
-Density is a measure for the "cohesion" of the network. It is simply the number of ties divided by the number of possible ties.
-```{r}
+Density is a measure for the "cohesion" of the network. It is simply the number of ties divided by the number of possible ties. 
+
+In an undirected graph with no self-loops (i.e. unreflexive) the number of possible ties is n*(n-1)/2. (So only one side of the matrix, excluding the diagonal). 
+
+For a directed network, we would divide the number of ties by n*(n-1)
+
+```{r, results=FALSE}
 #measure the density. 
-graph.density(g)
 graph.density(g_undirected)
+#verify:
+ecount(g_undirected)/((vcount(g_undirected)*(vcount(g_undirected)-1))/2)
+
+graph.density(g)
+#verify:
+ecount(g)/(vcount(g)*(vcount(g)-1))
 ```
 
-Find density in subgroups:
+Which values for density do you find for the directed and undirected network.
 
-```{r}
-#Find density in subgroups:
-#extract the womens network
+Density can vary across subgroups. To measure the density among men and women in the campnet data, we extract both networks based on this attribute and calculate the density. 
+
+```{r,results=FALSE}
+#first extract the womens network
 g.women <- induced_subgraph(g, V(g)$Gender == 1)
 #we can also plot only the women in the network
 plot(g.women,edge.arrow.size=.2,layout=layout_with_kk,main="campnet dataset women",vertex.color=vertex_attr(g.women)$Gender)
-#density among women. should be 0.357. cf. Table 9.1
+#density among women. cf. Table 9.1
 graph.density(g.women)
-#density among men. should be 0.278. cf. Table 9.1
+#density among men. cf. Table 9.1
 g.men <- induced_subgraph(g, V(g)$Gender == 2)
 plot(g.men,edge.arrow.size=.2,layout=layout_with_kk,main="campnet dataset men",vertex.color=vertex_attr(g.men)$Gender)
 graph.density(g.men)
 ```
 
+Which density values do you find for the male and female subgraph? Compare them with table 9.1 
+
 ## Component ratio
+
 The number of components in a network is also a measure of the whole network structure. If there are many components then this indicates that the network is "disconnected". Just taking the number of components, however, makes it hard to compare different networks on this measure. Therefore we normalize this measure by dividing it by the number of nodes in the network, or more accurately: C-1 / n-1 (where C is the number of components, and n is the number of nodes). It is 1 when all nodes are isolates and 0 when there is just one component. 
 
-```{r}
+```{r,results=FALSE}
 component_ratio <- (count_components(g,mode="strong")-1)/(vcount(g)-1)
 component_ratio
 ```
 
-## Connectedness
-This measures the proportion of the pair of nodes that are located in the same component. So, for a network of size n, there are n*n-1 pairs. Connectedness then sums up the number of (non-reflexive) pairs and divides it by the number of pairs. 
+What value do you find?
 
-```{r}
-#Connectedness is not available in igraph. 
+## Connectedness
+
+This measures the proportion of the pairs of nodes that are located in the same component. So, for a network of size n, connectedness sums up the number of (non-reflexive) pairs that can reach each other, so are within the same component, and divides it by the total number of possible pairs, which is n*n-1. 
+
+```{r,results=FALSE}
+#Connectedness is not available in igraph. But we can calculate it "by hand".
+#We assign the size of the different components to a vector csize
 csize <- g.components[[2]]
-class(csize)
-sum((csize-1)*csize)/(vcount(g)*(vcount(g)-1))
+#We then calculate the number of pairs within each component. In this case, we have four components of size 1, 1, 6 and 10. So there are zero pairs in the first two components, 5*6=30 pairs the third component, and 9*10=90 pairs in the fourth component. 
+connectedness_value <- sum((csize-1)*csize)/(vcount(g)*(vcount(g)-1))
+connectedness_value
 ```
 
-## Compactness
-Compactness is not available in igraph. 
-But we can calculate it by defining a function:
+What value do you find?
 
-```{r}
+## Compactness
+
+Compactness measures the number of paths that exist within a network, weighs them by their path length, and then takes the average by dividing by the number of possible pairs in the network. 
+
+```{r,results=FALSE}
 #Compactness
 #Compactness is not available in igraph. 
 #But we can calculate it by defining a function:
 Compactness <- function(x) {
-  gra.geo <- distances(x) ## get geodesics
+  gra.geo <- distances(x,mode="out") ## get geodesics. for a directed network we have to set the mode. 
   gra.rdist <- 1/gra.geo  ## get reciprocal of geodesics
   diag(gra.rdist) <- NA   ## assign NA to diagonal
   gra.rdist[gra.rdist == Inf] <- 0 ## replace infinity with 0
@@ -192,23 +224,73 @@ Compactness <- function(x) {
 Compactness(g)
 ```
 
+What value do you find?
+
 ## Reciprocity
+
 In directed networks, we can measure whether ties are reciprocated (or "symmetric"). Note that 0/0 pairs are also reciprocal ties (both nodes not having a tie with each other). If we do not want to include 0/0 pairs as reciprocated then mode is ratio.
-```{r}
+
+```{r,results=FALSE}
 #Reciprocity
-reciprocity(g,ignore.loops = TRUE,mode="ratio")
+reciprocity(g,ignore.loops = TRUE, mode="ratio")
 ```
 
-## Transitivity. 
-```{r}
-#Transitivity 
-#overall graph clustering coefficient
-transitivity(g,type='average')
-#weighted overall clustering coefficient on the undirected network, which is the same as the 9.4 formula in Borgatti, but for undirected networks. 
-transitivity(g)
+What value do you find?
+
+## Diameter
+
+A final measure of the cohesiveness of a network is the diameter of the network. This gives the longest shortest path. This thus indicates the "breadth" of the network or how long it takes to get from the two most distant points in the network to each other. You can also find this by looking at the maximal value in the distance matrix. 
+```{r,results=FALSE}
+#Diameter
+diameter(g)
 ```
+
+What value do you find? And can you find a path that has the largest shortest path in this network? 
+
+## Transitivity
+
+In mathematics, we call a relation "transitive" when A->B and B->C implies A->C. A "greater then" relation is for example transitive. If B is bigger than A, and C is bigger than B, then logically C is also bigger than A. 
+
+In network relations, transitivity refers to the existence of closed triads. If A is friends with B, and B is friends with C, then this relation is transitive when A also is friends with C. 
+
+By counting the number of closed triads in a network we can get a sense of how "clumpy" the network is. Duncan Watts and Steven Strogatz have proposed a measure for this "clumpiness" in a network. This measure is for undirected networks. 
+
+It starts by measuring the density of ties in each node's ego network (the density of ties among nodes connected to a given node). This is called the individual clustering coefficient. 
+
+Below we plot the ego network of Holly. She is connected to 5 nodes. 
+
+```{r}
+ego.holly <- induced.subgraph(g_undirected, neighborhood(g_undirected, 1, 1)[[1]])
+plot(ego.holly)
+```
+
+To calculate the individual clustering coefficient, we take the number of existing ties among those 5 nodes (in this case 3) and divide it by the number of possible ties between those 5 nodes (5x4/2=10). So the density is 3/10. 
+
+For Brazey, we can see that all her "alters" (the nodes she is connected to) are also connected to each other, so her individual clustering coefficient would be 1. 
+
+```{r}
+ego.brazey <- induced.subgraph(g_undirected, neighborhood(g_undirected, 1, 2)[[1]])
+plot(ego.brazey)
+```
+
+The overall clustering coefficient then just does this for all nodes and takes the average individual clustering coefficient. The overall _weighted_ clustering coefficient weighs the individual clustering coefficient by the number of pairs in each node's ego network (so instead of just taking the average across the individual clustering coefficients, we, for example, weigh the value of Holly by 10 and that of Brazey by 3 when calculating the average across all nodes).
+
+In Igraph we can calculate this using the function "transitivity".
+
+```{r,results=FALSE}
+#Transitivity 
+#overall clustering coefficient
+transitivity(g_undirected,type='average')
+#weighted overall clustering coefficient 
+transitivity(g_undirected)
+```
+
+What values do you find for the overall clustering coefficient and the weighted overall clustering coefficient?
 
 ## Centralization
+
+Centralization refers to the extent that a network is dominated by a single node. A maximally centralized network looks like a star: a node in the center has ties to all other nodes, and no other ties exist. (See figure 9.7 in Borgatti). 
+
 ```{r}
 #Centralization
 #Calculations for the example from figure 9.8 in Borgatti
@@ -222,44 +304,69 @@ centr_degree(c,mode="all",loops=FALSE,normalized=TRUE)
 centr_degree(g_undirected,loops=FALSE,normalized = TRUE)
 ```
 
-## Diameter
-```{r}
-#Diameter
-diameter(g)
-```
 
 # Centrality Measures
-We do all the below calculations for the undirected network
+
+Whereas whole network measures capture a property of the whole network, centrality measures are a variable at the level of the nodes. 
+
+We include here centrality measures for undirected, non-valued networks (cf. 10.3 in Borgatti).
 
 ## Degree centrality
+
+Degree centrality takes the number of ties of each node. Nodes with many ties are considered more central to the network. 
+
 ```{r}
 # Degree centrality
 deg <- degree(g_undirected)
 print(deg)
-#with the directed graph it would count up the in-degrees and outdegrees
-deg_in <- degree(g,mode="in")
-deg_out <- degree(g,mode="out")
-deg_total <- degree(g,mode="total")
-print(deg_in)
-print(deg_out)
-print(deg_total)
-
 plot(g_undirected,edge.arrow.size=.4,layout=layout_with_kk,main="campnet dataset size=degree",vertex.size=deg*5)
 ```
 
+
 ## Eigenvector centrality
-```{r}
+
+Eigenvector centrality has the special quality that it not only takes into account the degree of the node in question, but also the degree of the nodes that that node is connected to, and the degree of the nodes that those nodes are connected to, etc. It thus takes the _global_ structure of the whole network into account when calculating the centrality of each node. A node that has relatively low degree could therefore still be highly central globally when that node _is connected_ to central nodes. 
+
+```{r,results=FALSE}
 #Eigenvector centrality
 ev_g_un <- evcent(g_undirected)
-print(ev_g_un)
+#print the vector with eigenvector centrality measure
 ev_g_un$vector
+#print the largest eigenvalue
+ev_g_un$value
+#plot
 plot(g_undirected,layout=layout_with_kk,main="campnet dataset size=eigenvector centrality",vertex.size=ev_g_un$vector*20)
 ```
 
+Which node has the largest eigenvector centrality?
+
+We will not discuss the mathematics of this operation now. For an explanation of the intuition behind eigenvector centrality, see http://djjr-courses.wikidot.com/soc180:eigenvector-centrality It suffices to say that it is called _eigenvector_ centrality because finding centrality scores for nodes based on the centrality scores of the nodes that that node is connected to, is the same problem as finding the eigenvector and eigenvalues of a square matrix. This is illustrated by the code below which manually calculates the eigenvector centrality score by doing an eigenanalysis on the matrix. 
+
+```{r}
+g_matrix <- as_adjacency_matrix(g_undirected)
+#get the eigenvectors and eigenvalues of this adjacency matrix
+e <- eigen(g_matrix)
+#print the eigenvalues
+e$values
+#we take the largest eigenvalue
+max(e$values)
+#we take the eigenvectors that correspond to the largest eigenvalue.
+eigenvectors <- e$vectors
+#these are in the first column. they are all negative so we multiply by -1 to make them positive. that makes no difference to the results. 
+eigenvector <- eigenvectors[,1]*-1
+#to get the same output above we scale the values to the largest value (in this case for the first node)
+eigenvector/max(eigenvector)
+```
+
 ## Beta centrality or Bonacich power centrality
-When the beta factor is 0 then you get degree. However, the function in igraph normalizes by ssd=n. 
-From the igraph manual: The coefficient alpha acts as a scaling parameter, and is set here (following Bonacich (1987)) such that the sum of squared scores is equal to the number of vertices. This allows 1 to be used as a reference value for the “middle” of the centrality range.)
-So you do not get the degree values but normalized values where 1 is the norm. 
+
+Beta centrality encompasses both degree and eigenvector centrality. Using a parameter Beta, we can make the measure closer to degree centrality or eigenvector centrality. 
+
+When the beta factor is 0 then you get degree. When it gets close to 1/largest eigenvector then it becomes eigenvector centrality. 
+
+The function in igraph normalizes the scores on this measure so that the sum of squared scores equals the number of nodes of the network. 
+
+This should be taken into account when comparing the results with the output of degree centrality and eigenvector centrality. 
 
 ```{r}
 #Beta centrality or Bonacich power centrality
@@ -267,10 +374,17 @@ So you do not get the degree values but normalized values where 1 is the norm.
 #when b = 0 then this equals degree centrality
 beta_centrality <- power_centrality(g_undirected, exponent=0)
 print(beta_centrality)
+#check that it has indeed been scaled to the number of nodes
+sum(beta_centrality^2)
 plot(g_undirected,layout=layout_with_kk,main="campnet dataset size=beta centrality b=0",vertex.size=beta_centrality*20)
+```
 
-#we take a value of beta that approximates 1/largest eigenvalue. the largest eigenvalue is given by the eigenvector centrality function evcent
-#you can also calculate it
+Verify by hand that the differences between nodes are the same as for degree. 
+
+```{r}
+#we take a value of beta that approximates 1/largest eigenvalue. the largest eigenvalue can be found using the eigenvector centrality function evcent. above it was, for example, given by ev_g_un$value
+#you can also calculate it yourself
+g_matrix <- as_adjacency_matrix(g_undirected)
 e <- eigen(g_matrix)
 e$values
 max(e$values)
@@ -278,170 +392,61 @@ max(e$values)
 #with beta at its highest, beta centrality should approximate eigenvector centrality
 beta_centrality <- power_centrality(g_undirected, exponent=0.245)
 print(beta_centrality)
+#check that it has indeed been scaled to the number of nodes
+sum(beta_centrality^2)
 plot(g_undirected,layout=layout_with_kk,main="campnet dataset size=beta centrality b=0.245",vertex.size=beta_centrality*10)
 ```
 
 ## Closeness centrality
-Closeness centrality measures how many steps is required to access every other vertex from a given vertex
 
-```{r}
+Closeness centrality measures how many steps are required to access every other node from a given node. It is based on the sum of the geodesic distances from one node to all others. This value can be found by summing across the rows in the distance matrix. It is then normalized by dividing the minimum number when a node would have direct ties to everyone (which would be equal to n-1) by the sum of actual distances. In the campnet data, for Holly, this would for example be 17/38. 
+
+```{r,results=FALSE}
 closeness_g_un <- closeness(g_undirected, normalized=TRUE)
 print(closeness_g_un)
 plot(g_undirected,layout=layout_with_kk,main="campnet dataset size=closeness centrality",vertex.size=closeness_g_un*50)
 ```
 
+Which node has the highest closeness centrality?
+
 ## Betweenness centrality 
-Betweenness centrality measures the number of shortest paths going through a specific vertex
-```{r}
-#Betweenness centrality 
+
+Betweenness centrality measures the number of shortest paths going through a specific vertex. It is calculated by computing for all nodes except the focal node, what proportion of all the shortest paths from one to another pass through the focal node. These proportions are summed across all pairs and the result is a single value for each node in the network. 
+
+```{r,results=FALSE}
 #Betweenness centrality measures the number of shortest paths going through a specific vertex
 betweenness_g_un <- betweenness(g_undirected)
 print(betweenness_g_un)
 plot(g_undirected,layout=layout_with_kk,main="campnet dataset size=betweenness centrality",vertex.size=betweenness_g_un)
 ```
 
+Which node has the highest betweenness centrality?
+
 # Finding subgroups
-Show different algorithms...
 
+One important problem in network analysis is to find cohesive subgroups. Which nodes are more strongly connected to each other, rather than to others? 
 
-# Week 2 Session 2
+One important approach to finding cohesive subgroups is the Girvan-Newman algorithm. This approach tries to find  structurally important edges which, if they are removed, would fragment the network. The idea is that these edges exist between cohesive groups and not within them. The removal of these edges will just leave just the cohesive groups.
 
-# Structural equivalence and blockmodeling
-Find subgroups not because of overlapping relations but by their structurally equivalent position. The igraph package has only limited functionality for structural equivalence so we'll use SNA and 
+The algorithm starts by calculating the edge betweenness of all edges. Edge betweenness is defined here in a similar way to node betweenness. Edge betweenness is a count of the number of times an edge lies on a geodesic path between a pair of vertices. Hence, as in the vertex case, we take all pairs of vertices and simply count in the same way the number of times each edge is part of a geodesic path. If we delete the edge with the highest score, we will either increase the number of components or increase the fragmentation. If we iteratively repeat this process, the number of components will continue to increase until we are only left with isolates.
 
-# Replication of John Mohr's Soldiers, Mothers, Tramps and Others
-Here we will replicate the analysis done by John Mohr in Soldiers, Mothers, Tramps and Others.  
-He uses the Concor algorithm to do the blockmodeling. This is not available in igraph.  
-Adam Slez has rewritten the program in R. This is not available through CRAN but we can download it directly from github. We need the devtools package to do this.
+As the algorithm iterates, we obtain different partitions. These do not increase necessarily by 1 each time, as there may be more than one edge with the highest score. In addition, the algorithm makes an assessment of how good each partition is in terms of a numerical score called ‘modularity’, denoted by Q. Modularity compares the number of internal links in the groups to how many you would expect to see if they were distributed at random. Higher values mean that the algorithm has found more significant groupings. Negative values are possible, indicating that the groups are less cohesive than a purely random assignment.
+
+Below we use the Girvan-Newman approach to edge_betweenness on the undirected campnet data. 
 
 ```{r}
-library(devtools)
-devtools::install_github("aslez/concoR")
-library(concoR)
-#we import the mohr soldiers data
-soldiers <- read.csv2("Data/mohr_matrix_soldiers.txt", header=TRUE,row.names = 1)
-#soldiers <- read.csv2("Data/mohr_matrix_soldiers.csv", header=TRUE,row.names = 1)
-soldiers[]
-str(soldiers1)
-#we take the correlation among the columns
-soldiers_cor <- cor(soldiers1)
-soldiers_cor
-#to follow along with the discussion of the correlation between seamen and widows select the correlation between these two identities
-cor(soldiers1$SEAMEN,soldiers1$WIDOWS)
-#the correlation is relatively low with 0.21. but as we'll see, they will be classified as similar based on having similar patterns of correlation with *other* status identities
-#to see this, we apply the concor algorithm. 
-#p=3 means that we look at a 3-level split. which is what Mohr reports in his figure 1.
-blks3 <- concor_hca(list(soldiers_cor),p=3) 
-blks3
-#SEAMEN and WIDOWS are now grouped together in block 5 (together with BLIND_NG IMMIGN_NG SOLDIERS)
-#This means that these status identities are structurally equivalent, i.e. have similar positions vis-a-vis other status identities
-#In other words, both relate in similar manners to other status identities
-#So even if they do not strongly correlate with each other, they do have a similar position in the overall discourse structure
-#To further investigate the blockmodel solution we can also look at the groupings at lower splits.
-#This should show the same divisions as in figure 1
-blks2 <- concor_hca(list(soldiers_cor),p=2) 
-blks2
-blks1 <- concor_hca(list(soldiers_cor),p=1) 
-blks1
-#########################################################################
-
-library(sna)
-blk_mod <- blockmodel(soldiers_cor, blks3$block, diag=TRUE,
-                      glabels = names(soldiers_cor),
-                      plabels = rownames(soldiers_cor[[1]]))
-blk_mod
-densitymatrix <- blk_mod[["block.model"]]
-class(densitymatrix)
-densitymatrix[densitymatrix>0.1375] <- 1
-densitymatrix[densitymatrix<0.1375] <- 0
-densitymatrix
-mohrnetwork <- graph_from_adjacency_matrix(densitymatrix)
-plot(mohrnetwork,edge.arrow.size=.2,layout=layout_with_kk)
-class(blk_mod)
-plot(blk_mod)
+community <- cluster_edge_betweenness(g_undirected)
 ```
-
-# Similarity and distance measures
-Matrix multiplication is one way to transform a two-mode matrix into a one-mode matrix. 
-More generally, we can think of this transformation as a way to measure the similarities (or distances) between rows (or columns: now that we know about transposing the matrix this distinction becomes trivial).
-The example refers to a document-word matrix. In this matrix, the rows refer to documents (for example, newspaper articles) and the columns refer to words. The cell entries show the number of times each word occurs within that document.
-
-## Euclidian distance
-For a quick refresher on high school geometry look here: https://towardsdatascience.com/the-euclidean-distance-is-just-the-pythagorean-theorem-2e672017d875 
-
-![Euclidian distance](Images/Distance measures.png){width=50%}
-
-## Cosine similarity
-![Cosine similarity](Images/Distance measures_cosine.png){width=50%}
-
-## Jaccard similarity 
-![Jaccard](Images/Distance measures_jaccard.png){width=50%}
-
-## Pearson correlation 
+The algorithm has calculated the modularity scores and chosen the one with the maximal value. In this case, 0.55. It then gives the, in this case, 3 groups, which can also be plotted. 
 
 ```{r}
-#distance and similarity measures
-s1 <- c(5,5,2,1)
-s2 <- c(3,3,5,1)
-s3 <- c(2,2,6,1)
-s4 <- c(4,4,4,1)
-my_m <- rbind(c(5,5,2,1),c(3,3,5,1),c(2,2,6,1),c(4,4,4,1))
-#default is euclidian distance
-dist(my_m)
-
-#cor calculates correlation among columns so transpose matrix first to get correlation among rows
-cor(t(my_m))
-
-#example for jaccard. dist measures distances so binary=1-jaccard
-e <- c(1,1,0,0)
-f <- c(0,1,1,0)
-g <- c(0,0,0,1)
-h <- c(1,1,1,1)
-matrix_jaccard <- rbind(e,f,g,h)
-dist(matrix_jaccard,method="binary")
-
-#To use the Breiger example: We would like to incorporate the differences between the attendance pattern of person D, E and F. D visits 4 events while E visits only 1 and F 2. The overlap between E and D and F respectively should have different weights since the chance that E overlaps with D is greater since D is "just" a more frequent visitor of events. The overlap between E and F is higher since both are not frequent visitors but still have also an event in common. We can use the Jaccard measure to take these differences into account. 
-1-dist(F,method="binary")
+community
+membership(community)
+plot(community,g_undirected)
 ```
 
-```{r}
-#negative correlation becomes positive when adding zeros
-author_a <- c(NA,4,2,3,9,10)
-author_b <- c(4,NA,8,9,2,5)
-author_matrix <- rbind(author_a,author_b)
-cor(t(author_matrix),use="complete.obs")
-cor(author_a,author_b,use="complete.obs")
 
-author_a <- c(NA,4,2,3,9,10,0,0,0,0)
-author_b <- c(4,NA,8,9,2,5,0,0,0,0)
-author_matrix <- rbind(author_a,author_b)
-cor(t(author_matrix),use="complete.obs")
-cor(author_a,author_b,use="complete.obs")
 
-#perfect correlation goes away when adding zeros
-author_a <- c(NA,7,1,2,3,4)
-author_b <- c(7,NA,10,11,12,13)
-author_matrix <- rbind(author_a,author_b)
-cor(t(author_matrix),use="complete.obs")
-cor(author_a,author_b,use="complete.obs")
-
-author_a <- c(NA,7,1,2,3,4,0,0,0,0)
-author_b <- c(7,NA,10,11,12,13,0,0,0,0)
-author_matrix <- rbind(author_a,author_b)
-cor(t(author_matrix),use="complete.obs")
-cor(author_a,author_b,use="complete.obs")
-
-library(lsa)
-author_a <- c(0,7,1,2,3,4,0,0,0,0)
-author_b <- c(7,0,10,11,12,13,0,0,0,0)
-cosine(author_a,author_b)
-cosine(s1,s2)
-cor(author_a,author_b,use="complete.obs")
-
-my_example=matrix(c(0,0,1,0,0,0,1,0,1,1,0,0,0,1,1,1,1,1,0,1,1,0,1,0,0,0,0,1,0,0,1,0,0,0,1,1,0,0,0,0,0,1,1,1,1,0,0,0,1,0,0,0,1,0,0,0,1,1,1,0,0,0,1,1,1,1,0,0,0,1,0,1,0,0,0,0,1,0,1,1,1,0,0,1,0,1,0,0,0,0,1), ncol=7,nrow=13)
-my_example
-my_example_dist <- round(as.matrix(dist(my_example,method="binary",diag=TRUE)),digits=2)
-```
 
 
 
