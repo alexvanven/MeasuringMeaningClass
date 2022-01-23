@@ -8,10 +8,10 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 # Week 3 Session 1
-Topics: 
-- Multidimensional scaling
-- Cluster analysis
-- Correspondence analysis
+Topics:  
+- Multidimensional scaling  
+- Cluster analysis  
+- Correspondence analysis  
 
 ## Multidimensional scaling 
 Multidimensional scaling analysis (MDS) is one of the oldest and most widely used methods for mapping out the relational system of differences in the measurement of meanings. Simply stated, an MDS analysis reads in a square matrix of similarities or differences and produces a transformation of the data that seeks to locate all of the objects in a common (two- or more dimensional) space in such a way that the similarities in the input matrix are transformed into Euclidean distances. An MDS space would thus represent a series of objects in such a way that (generally speaking) if two items are similar to one another (in the input matrix) then they are located near one another in the space. If they are dissimilar, they are located far apart. When analyzed in two (or three) dimensions, the items can then be easily plotted in such a way as to visually convey the relational structure in which they are embedded.  
@@ -197,7 +197,7 @@ library("factoextra")
 library("corrplot")
 ```
 
-The following calculates the results of correspondence analysis "by hand" to make the steps explicit. We use the example data from Applied Correspondence Analysis by Sten-Erik Clausen. 
+We use the example data from Applied Correspondence Analysis by Sten-Erik Clausen to illustrate the workings of CA. The data is a simple cross-tabulation for three types of crime over three areas in Norway. 
 
 ```{r}
 N = matrix(c(395, 147, 694, 2456, 153, 327, 1758, 916, 1347), 
@@ -250,19 +250,22 @@ R = P - E
 print(R)
 ```
 
-We calculate chi-square distances: we divide the residuals by the expected values and multiply this by the square root of expected values. 
+To standardize the residuals we divide by the square root of the expected values. This gives the chi value per cell.
 
 ```{r}
-I = R / E
-print(I)
-Z = I * sqrt(E)
+Z = R/sqrt(E)
 print(Z)
 ```
 
-This matrix can then be submitted to SVD
+We can see that Oslo in relatively more stongly characterized by Fraud, Mid Norway by Vandalism and North Norway by Burglary. We want to plot this association in a two-dimensional space. To do so, we can make use of Singular Value Decomposition. This decomposes the matrix into three matrices: a matrix of left singular vectors (U), a matrix of singular values (with only values in the diagonal), and a matrix of right singular vectors. Singular vectors are orthogonal to each other, meaning that they are like the x-y dimensions in a space. The basic idea then is to plot the rows (using the left singular vectors) and the columns (using the right singular values) into the same space. 
+
+The first step would then be to submit the chi-values calculated above to SVD.
+
 ```{r}
 SVD = svd(Z)
+#left singular vectors for rows
 rownames(SVD$u) = rownames(P) 
+#right singular vectors for columns
 rownames(SVD$v) = colnames(P)
 print(SVD)
 ```
@@ -276,18 +279,27 @@ eigenvalues = SVD$d^2
 We calculate the proportion of the singular values to the total which indicated the explained variance per dimension
 
 ```{r}
-prop.table(eigenvalues)
+prop <- prop.table(eigenvalues)
+prop
+sum(prop[1:2])
+```
+
+```{r}
+#we unweight the row points by the row masses
 standard.coordinates.rows = sweep(SVD$u, 1, sqrt(row.masses), "/")
+#we unweight the column points by the column masses
 print(standard.coordinates.rows)
 standard.coordinates.columns = sweep(SVD$v, 1, sqrt(column.masses), "/")
 print(standard.coordinates.columns)
+#we multiply the standard coordinates by the singular values
 principal.coordinates.rows = sweep(standard.coordinates.rows, 2, SVD$d, "*")
 print(principal.coordinates.rows)
+#we multiply the standard coordinates by the singular values
 principal.coordinates.columns = sweep(standard.coordinates.columns, 2, SVD$d, "*")
 print(principal.coordinates.columns)
 ```
 
-Symmetric plot takes the principal coordinates of rows and columns
+Symmetric plot takes the principal coordinates of rows and columns. 
 ```{r}
 plot(principal.coordinates.columns[,1:2], xlim=c(-0.8,0.8), ylim=c(-0.6,0.6))
 points(principal.coordinates.rows[,1:2])
@@ -295,39 +307,10 @@ text(principal.coordinates.rows,labels=rownames(principal.coordinates.rows),pos=
 text(principal.coordinates.columns,labels=rownames(principal.coordinates.columns),pos=1)
 ```
 
-Asymmetric plot takes the principal coordinates of rows
-```{r}
-plot(principal.coordinates.rows[,1:2], xlim=c(-0.8,0.8), ylim=c(-0.6,0.6))
-points(standard.coordinates.columns[,1:2])
-text(principal.coordinates.rows,labels=rownames(principal.coordinates.rows),pos=1)
-text(standard.coordinates.columns,labels=rownames(principal.coordinates.columns),pos=1)
-```
+Compare the result with the "direct" approach using the CA function
 
-Compare the results with the factominer CA solution
 ```{r}
 res.ca <- CA(N, graph = TRUE)
-eig.val <- get_eigenvalue(res.ca)
-fviz_screeplot(res.ca, addlabels = TRUE, ylim = c(0, 100))
-```
-
-We can illustrate CA with a dataset in FactoMineR
-
-```{r}
-data(housetasks)
-print(housetasks)
-```
-
-Calculate chi-square test
-
-```{r}
-chisq <- chisq.test(housetasks)
-chisq
-```
-
-Do the CA
-```{r}
-res.ca <- CA(housetasks, graph = FALSE)
-print(res.ca)
 ```
 
 Get eigenvalues
@@ -338,48 +321,65 @@ eig.val
 
 Inspect plot of eigenvalues
 ```{r}
+fviz_screeplot(res.ca, addlabels = TRUE, ylim = c(0, 100))
+```
+
+## Example by Jang and Barnett of CA on corporate documents 
+
+![Jang&Barnett_title](Images/Jang&Barnett_title.png){width=50%}
+
+Jang & Barnett (1994) examined the impact of national culture on organizational culture by analyzing messages directed to external audiences. For a total of 35 Japanese and American businesses, annual reports for 1992 were analyzed by determining the most frequently used words in all 35 reports. Then, the frequency of each word for each company was determined. 
+
+## Original co-occurence matrix for words and companies 
+![Jang&Barnett_Table 4_1](Images/Jang&Barnett_Table 4_1.png){width=50%}
+![Jang&Barnett_Table 4_2](Images/Jang&Barnett_Table 4_2.png){width=50%}
+
+We copied this matrix into a csv file. 
+
+```{r}
+#read in matrix csv-file 
+matrix <- read.csv2("Data/Jang_Barnett.csv", header=TRUE,row.names = 1)
+class(matrix)
+head(matrix)
+```
+
+We can now apply correspondence analysis to simultaneously plot the words and companies in the same 2-dimensional space.
+
+```{r}
+#save as matrix data type 
+my_mat <- as.matrix(matrix)   
+class(my_mat)
+
+#do chisquare test
+chisq <- chisq.test(my_mat)
+chisq
+
+#do the Correspondence Analysis
+res.ca <- CA(my_mat, graph = FALSE)
+print(res.ca)
+
+#get eigenvalues
+eig.val <- get_eigenvalue(res.ca)
+eig.val
+
+#inspect plot of eigenvalues
 fviz_screeplot(res.ca, addlabels = TRUE, ylim = c(0, 80))
 ```
 
-Plot the CA. This is a symmetric plot 
+The original correspondence analysis in the paper only plots the companies.
+
+![Jang&Barnett_Figure 2](Images/Jang&Barnett_Figure 2.png)
+
+```{r}
+#plot the CA. this is a symmetric plot 
+fviz_ca_biplot(res.ca, invisible = "row", repel = TRUE)
+```
+
+
+We can see that our plot is flipped around the x-axes, but matches the coordinate configuration of the original paper. In our case, the US companies are positioned to the left and the Japanese companies more to the right. There are also some Japanese companies that are more US-like in their language than others. Although the plot with the words is somewhat hard to read, we could start analyzing which words seem to define the US-Japanse cultural differences. 
+
 ```{r}
 fviz_ca_biplot(res.ca, repel = TRUE)
 ```
 
-Inspect rows
-```{r}
-row <- get_ca_row(res.ca)
-row
-```
 
-Coordinates
-```{r}
-print(row$coord)
-```
-
-The cos2 measures the degree of association between rows/columns and a particular axis
-The sum of the cos2 for rows on all the CA dimensions is equal to one.
-
-```{r}
-print(row$cos2)
-corrplot(row$cos2, is.corr=FALSE)
-```
-
-Contributions to the principal components
-The row variables with the larger value, contribute the most to the definition of the dimensions
-```{r}
-print(row$contrib)
-corrplot(row$contrib, is.corr=FALSE)
-```
-
-Contributions of rows to dimension 1
-```{r}
-fviz_contrib(res.ca, choice = "row", axes = 1, top = 10)
-```
-
-Contributions of rows to dimension 2
-```{r}
-fviz_contrib(res.ca, choice = "row", axes = 2, top = 10)
-```
-
-Can do the same for the columns
