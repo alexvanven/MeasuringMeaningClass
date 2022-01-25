@@ -12,297 +12,365 @@ knitr::opts_chunk$set(echo = TRUE)
 Topics: 
 - Working with unstructured text
 - Topic modeling
-- (Word embedding) 
 
 ## Text as data
-The exemplary studies we've read in this course until now in most cases relied on manual coding of text. The coding mostly proceeded by looking at the formal structure of the texts, whether they contained some "format" which could be used to extract units in a meaningful way. So in the directories of welfare organizations, the author discovered a that most texts contained two types of elements (identities and practices); in the analysis of the Nazi biography, the authors looked to the text as a sequence of (types of) events; and in the analysis of music reviews, these texts seemed to almost always contain a statement about genre classification and the use of evaluative criteria. After the identification of this "format", the coding could proceed in an inductive way and at a low level of abstraction. Yet although the coding stayed as close as possible to the actual text, in most cases it still required quite intensive manual coding and was therefore quite time-consuming. Given the enormous growth of the number of documents available in archives and repositories in recent years, and the costs of coding large corpora, social scientists have increasingly looked at ways to avoid manual coding of unstructured text yet still extract meaningful information from textual data. Although (semi-)automatic coding of textual material is a theme that far extends what we can discuss in one session, we will focus on some basic tools in R that can help you work with large corpora of unstructured text and apply some of the techniques for measuring meaning (such as network analysis, multidimensional scaling and correspondence analysis) to your own textual data. We will also introduce one machine learning tool that can help code your material automatically: topic modeling.
+The studies that we've read in this course so far mostly relied on some form of manual coding of text. This coding generally proceeded by looking at the formal structure of the texts, whether they contained some "format" which could be used to extract units in a meaningful way. So in the directories of welfare organizations, the author discovered that most texts contained two types of elements (identities and practices); in the analysis of the Nazi biography, the authors looked to the text as a sequence of (types of) events; and in the analysis of music reviews, these texts seemed to almost always contain a statement about genre classification and the use of evaluative criteria. After the identification of this "format", the coding could proceed in an inductive way and at a low level of abstraction. It allowed for a very fine-grained reading of texts. Yet although the coding stayed as close as possible to the actual text, in most cases the projects still required quite intensive manual coding and were quite time-consuming. We have therefore been working with the end-products of those coding efforts -- the matrices -- and looked at techniques that can analyze those matrices. 
 
-## Get the text
-There are many textual resources available for research out there. I have already pointed you to some of the digitized sources that were used by some of the authors that we read in this course. The documents used by Mohr are for example available on Hathitrust (https://catalog.hathitrust.org/Record/008955610). The Nazi biographies analyzed by Bearman and Stovel at the Hoover institute: https://digitalcollections.hoover.org/objects/58492 Other large textual archives are Lexis-Nexis, Proquest, Jstor and many others. Of course, the internet itself also is a giant repository of text, as well as social media such as Twitter. Depending on your research domain you would generally have to learn the appropriate technique to quickly download the data you're interested in (such as screenscraping, working with an API, or in the case of historical documents that often come in the form of PDF documents how to do make them machine-readable using optical character recognition). There are many sources out there that you could consult. For the purpose of this short illustrative tutorial, we will start with some data from the Gutenberg project, an online library of more than 60,000 public domain books. 
+In this session, I want to focus on the _construction_ of those matrices, but in cases when you do not have the time to do any manual coding, and/or when your data comes in the form of unstructured text but is just too large to code manually. Our aim will be to look at how to transform that unstructured text into a matrix that could subsequently be analyzed with the techniques that we have already discussed. Although (semi-)automatic coding of textual material is a theme that far extends what we can discuss in one session, we will focus on some basic tools in R that can help you work with large corpora of unstructured text and would enable you to apply some of the techniques for measuring meaning (such as network analysis, multidimensional scaling and correspondence analysis) to your own textual data. 
+
+### Get the text
+There has been an enormous growth in the number of documents available in archives and repositories in recent years. I have already pointed you to some of the digitized sources that were used by some of the authors that we read in this course. The documents used by Mohr are for example available on Hathitrust (https://catalog.hathitrust.org/Record/008955610). The Nazi biographies analyzed by Bearman and Stovel at the Hoover institute: https://digitalcollections.hoover.org/objects/58492 Other large textual archives are Lexis-Nexis, Proquest, Jstor and many others. Of course, the internet itself also is a giant repository of text, as well as social media such as Twitter.
+
+Depending on where your data is located, you would generally have to learn the appropriate technique to access the data you're interested in. This can involve screenscraping, working with an API, or in the case of historical documents that  come in the form of PDF documents, how to do make them machine-readable using optical character recognition. We will not discuss these techniques here. There are many sources out there that you could consult. For the purpose of this tutorial, we will use some existing data from the Gutenberg project, an online library of more than 60,000 public domain books. 
+
+So the first step is to install the gutenbergr package:
+
+```{r}
+#install.packages("gutenbergr")
+library(gutenbergr)
+```
   
- 
+The package comes with the metadata of each of the texts in the Project Gutenberg library preloaded in. You can use the View() function to look at all of the data. 
+```{r eval = F}
+View(gutenberg_metadata)
+``` 
 
-## The term-document matrix
-Topic modeling, as well as other machine learning based tools, work with texts in the form of term-document (or document-term) matrix. This is a matrix where each word is a row and each colum is a document (or vice versa). The number within each cell describes the number of times the word appears in the document. Many of the most popular forms of text analysis, such as topic models, require a document term matrix. In the vocabulary of this course, this would be a two-mode matrix. 
-
-When we work with a text corpus, one of the earliest steps would be to create this word-document matrix. It would also involve pre-processing such as removing certain words that have no intrisinc meaning (such as stopwords -- a, the, and, for, etc.), removing punctuation, numbers, making all words lower case, and possibly word stemming, which means reducing words to their basic form (for example, typing -> type; walked -> walk). 
-
-Another common step in constructing a term-document matrix is weighting the words by their Term-Frequency and Inverse Document Frequency (TF/IDF). TF  gives stronger weight to words in a document that more frequently occur in a particular document (so across columns in a word-document matrix). While IDF decreases the weight of words that occur often in all the documents (so across rows in a word-document matrix). TF is calculated by dividing the number of times a word appears in a document by the total number of words in that document. TF increases the more important that word is for that document. IDF is calculated by taking the log of the total number of document in a corpus divided by the number of documents in which a word appears. IDF becomes larger the less often the word appears in the corpus. We then multiply TF*IDF. This means that we have given greater weight to words that are highly characteristic for that document. 
-
-
-#Topic Modeling using Latent Semantic Analysis
+Let's start with two texts: the US Constitution and add Pride and Prejudice by Jane Austin. These two texts have id number 5 and 1342 in the Gutenberg collection. Using these ids, we can download these books into R. This might take some time depending on the speed of your internet connection.
 
 ```{r}
-#We construct the example matrix
-human <- c(1,0,0,1,0,0,0,0,0)
-interface <- c(1,0,1,0,0,0,0,0,0)
-computer <- c(1,1,0,0,0,0,0,0,0)
-user <- c(0,1,1,0,1,0,0,0,0)
-system <- c(0,1,1,2,0,0,0,0,0)
-response <- c(0,1,0,0,1,0,0,0,0)
-time <- c(0,1,0,0,1,0,0,0,0)
-EPS <- c(0,0,1,1,0,0,0,0,0)
-survey <- c(0,1,0,0,0,0,0,0,1)
-trees <- c(0,0,0,0,0,1,1,1,0)
-graph <- c(0,0,0,0,0,0,1,1,1)
-minor <- c(0,0,0,0,0,0,0,1,1)
-X <- rbind(human,interface,computer,user,system,response,time,EPS,survey,trees,graph,minor)
-colnames(X) <- c("c1","c2","c3","c4","c5","m1","m2","m3","m4")
-print(X)
+familiar_texts <- gutenberg_download(c(5, 1342), meta_fields = "title", mirror = "http://gutenberg.readingroo.ms/")
 ```
 
-Measure the intial correlation between several rows
+### Tidy text
 
-```{r}
-cor(human,user, method="spearman")
-cor(human,minor, method="spearman")
+To work with text in R it is worth installing tidytext, a package specifically useful for analyzing text data. It handles data using the "tidy data" principles. In the case of text, it will store text as a table with one-token-per-row. A token is a meaningful unit of text, such as a word, that we are interested in using for analysis, and tokenization is the process of splitting text into tokens. This one-token-per-row structure is in contrast to the ways text is often stored in current analyses, perhaps as strings. For tidy text mining, the token that is stored in each row is most often a single word, but can also be an n-gram, sentence, or paragraph. For more information on Tidytext, and a very useful handbook: https://www.tidytextmining.com 
+
+```{r eval=F}
+#install.packages("tidytext")
+#install.packages("tidyverse")
 ```
 
-Do the singular value decomposition on the X matrix
-
+Load the packages into R. Tidyverse is a more general package for using "tidy" data. 
 ```{r}
-SVD <- svd(X)
-print(SVD)
-rownames(SVD$u) = rownames(X) 
-rownames(SVD$v) = colnames(X)
-u <- as.matrix(SVD$u)
-v <- as.matrix(SVD$v)
-d <- SVD$d
+library(tidytext)
+library(tidyverse)
 ```
 
-We can set all but the first two singular values to zero. this means that r=2
+### Tokenizing
+The first step is tokenizing the texts - which means breaking sentences and paragraphs down into their respective words. Tidy text has a useful function called unnest_tokens() which does just that. The function has three arguments: first we select the corpus we want to analyze (familiar_texts in this case), second we give a name to the column in which we'll place our tokens (word in this case), third we name the input column that the text comes from (text in this case). After using unnest_tokens, we have split each row so that there is one token (word) in each row of the new data frame; the default tokenization in unnest_tokens() is for single words.
 
 ```{r}
-d[3:9] <- 0
-d_r <- as.matrix(diag(d))
-print(d_r)
+tokenized_words <- unnest_tokens(familiar_texts, word, text)
+```
+When we print out the data it will be in the format of a "tibble". 
+
+```{r}
+tokenized_words
+```
+What you'll see is that it has more than 120.000 rows. To avoid printing out a tibble that large, we'll do head() instead, which will only print out the first few rows. 
+```{r}
+head(tokenized_words)
+```
+### Remove stopwords
+Next, we need to do some cleaning or pre-processing. We can, for example, remove common and therefore uninformative words in the texts - such as "but", "and", "about", "he", "she", etc. These are called stopwords and tidy already has some predefined stopwords for us to use. We can use the data() function to read them into our R. 
+```{r}
+data(stop_words)
+head(stop_words)
+```
+We can remove the stop words using the anti_join() function. This matches the two two data sets and removes the ones that are in the stopwords list. We can also remove numbers and punctuation with str_extract and mutate. The regex expression [a-z'] selects only characters. We then count up how often each word appears in each of the books using count(). Other pre-processing steps could include "stemming" which means reducing words to their stem, such as "walking" to "walk". We don't do that here.
+```{r}
+word_counts <- anti_join(tokenized_words, stop_words, by = "word")
+word_counts <- mutate(word_counts, word = str_extract(word, "[a-z']+"))
+word_counts <- count(word_counts, title, word, sort = TRUE)
+head(word_counts)
+```
+Raw counts are useful when we look at just one book, but when our goal is to compare many texts, they may be biased if one of our texts is much longer than another, and therefore has higher counts across every word. A common solution to this problem is to normalize counts by the total number of words in each text. Here we group the data by title, divide each count by the sum of the counts of all the words in each title and save the result as the variable proportion, remove the count variable keeping the proportions instead, and finally dropping any row in the data which has a missing value with drop_na().
+
+Btw, below you also see a new symbol %>% which is called "piping". It is a useful way to string together a bunch of function calls, in a clear and informative manner, without having to reassign them to a new object each time.
+```{r}
+word_proportions <- word_counts %>%  
+  group_by(title) %>%
+  mutate(proportion = n / sum(n)) %>% 
+  select(-n) %>% 
+  spread(title, proportion) %>%
+  drop_na
+head(word_proportions)
 ```
 
-We put the matrix back together but now with only keeping the first two singular values.
+Now that we have the frequency with which each word occurs in each text, let's visualize their differences. 
 
+Let's focus on *Pride and Prejudice* first. We use the top_n() function to select only the top 20 words with respect to proportion. We reorder the dataset according to proportion. We then plot the results as a bar plot using geom_col(). To make the result go horizontally we also use coord_flip(), which flips the coordinates of the plot.
 ```{r}
-X_r <- u %*% d_r %*% t(v)
-print(round(X_r,2))
+top_words_pandp <- word_proportions %>% 
+  top_n(20, `Pride and Prejudice`) %>%
+  mutate(word = reorder(word, `Pride and Prejudice`))
+ggplot(top_words_pandp, aes(word, `Pride and Prejudice`)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip()
 ```
 
-We measure the correlations among the rows(=the words)
-
+We do the same for *The United States Constitution*.
 ```{r}
-cor(t(X_r), method="pearson")
-cor(t(X_r), method="spearman")
+top_words_const <- word_proportions %>% 
+  top_n(20, `The United States Constitution`) %>%
+  mutate(word = reorder(word, `The United States Constitution`))
+ggplot(top_words_const, aes(word, `The United States Constitution`)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip()
 ```
 
-We measure the correlations among the columns(=the documents)
+### From counts to a document-to-term matrix 
 
-```{r}
-cor(X,method="pearson")
-cor((X_r), method="pearson")
+Besides just counting the number of words in two texts, we often wanted to compare a whole bunch of texts with each other. And to do this we have to build a matrix of documents by terms, i.e. a document-to-term matrix. 
+
+To illustrate this process, we take all of Charles' Dickens works and create a document-term matrix.
+
+Again, we download Dickens' texts with gutenberg_download(), just like before. This might take a while. If it does not work, you can also open the "dickens_texts.RDS" file below. 
+
+```{r ignored_dickens, eval=F}
+#dickens_books <- gutenberg_works(author == "Dickens, Charles")
+#dickens_texts <- gutenberg_download(dickens_books$gutenberg_id, meta_fields = "title", mirror = "http://gutenberg.readingroo.ms/")
 ```
 
-The differences between the different topics should now be more clearly defined.
+```{r echo = F}
+dickens_texts <- readRDS("Data/dickens_texts.RDS")
+```
 
-#Topic Modeling using Latent Dirichlet Allocation
+Next we tokenize them and count how often each word occurs in each text. 
+```{r}
+dickens_words <- dickens_texts %>%
+  unnest_tokens(word, text) %>%
+  count(title, word, sort = TRUE)
+```
+There should be around 500.000 words in this file.
 
-#We will use the topicmodels package
+Let's evaluate the number of words in each book. We add the result to the original data with left_join().  
+```{r}
+total_words <- dickens_words %>% 
+  group_by(title) %>% 
+  summarize(total = sum(n))
+dickens_words <- left_join(dickens_words, total_words)
+head(dickens_words)
+```
+
+In constructing a document-term matrix, it is common to convert the raw counts into tf-idfs. TF and IDF stand for Term-Frequency and Inverse Document Frequency. The idea with tf-idf is that we want to weight words in each text depending on how special or specific they are to a given text, emphasizing those words that are important to each text. TF  gives stronger weight to words in a document that more frequently occur in a particular document. While IDF decreases the weight of words that occur often in all the documents. TF is calculated by dividing the number of times a word appears in a document by the total number of words in that document. So TF increases the more important that word is for that document. IDF is calculated by taking the log of the total number of document in a corpus divided by the number of documents in which a word appears. IDF becomes larger the less often the word appears in the corpus. We then multiply TF*IDF. This means that we have given greater weight to words that are highly characteristic for that document. 
+
+Tidy text has a convenient function, bind_tf_idf, for calculating it. We just have to tell it the name of our word column, the column which identifies which texts we are referring to, and the word counts column. 
 
 ```{r}
-install.packages("topicmodels")
-install.packages("quanteda")
+dickens_words <- dickens_words %>%
+  bind_tf_idf(word, title, n)
+```
+
+What do the results look like?
+```{r}
+dickens_words %>%
+  select(-total) %>%
+  arrange(desc(tf_idf)) %>% 
+  head()
+```
+
+Let's plot the top fifteen words, by tf-idf, for four Dickens classics 
+
+```{r}
+dickens_words %>%
+  filter(title %in% c("A Christmas Carol", 
+                      "Oliver Twist", 
+                      "A Tale of Two Cities",
+                      "David Copperfield")) %>%
+  arrange(desc(tf_idf)) %>%
+  mutate(word = factor(word, levels = rev(unique(word)))) %>% 
+  group_by(title) %>% 
+  top_n(15) %>% 
+  ungroup() %>%
+  ggplot(aes(word, tf_idf, fill = title)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = "tf-idf") +
+  facet_wrap(~title, ncol = 2, scales = "free") +
+  coord_flip()
+```
+
+Now to turn it into a matrix all we have to do is use the cast_sparse function, specify which variables should be on the rows and columns, and how we want to fill the matrix.
+
+```{r}
+dickens_dtm <- cast_sparse(dickens_words, row = title, col = word, value = tf_idf)
+class(dickens_dtm)
+dim(dickens_dtm)
+```
+
+The file type is called a "sparse matrix", meaning that it is very large, contains many zero's and therefore would be very difficult to hold into memory on your computer. Luckily, R can handle these types of sparse matrices as a particular type of object. The dimensions of this matrix are 74 rows by 53611 columns. 
+
+### Comparing texts with cosine
+
+We would now have a matrix that we could possibly analyse in a number of ways. I'll illustrate here how to convert this matrix to a book-by-book matrix, which then can be further analysed using, for example, the igraph package. One of the issues with large matrices such as these is that it is difficult to use standard similarity measures since it would require holding the full matrix in memory. That was also the reason why we created a Sparse matrix. But luckily there are packages in R that can do calculations on these Sparse matrices and calculate similarity measures. 
+
+To do this, we treat each text or word's distribution of words as a vector in multidimensional space (where the number of dimensions are the number of words in the data) and then use cosine similarity to take the angle of every pair of vectors. This is an intuitive measure of similarity - where values close to 1 signify that two vectors (i.e. the word distributions of two texts) are going in precisely the same direction, and values close to 0 signal that they are going in orthogonal directions (i.e. they are not similar at all).
+
+We will use the proxyC package to calculate cosine similarity.
+```{r eval = F}
+#install.packages("proxyC")
+```
+
+```{r, results=FALSE}
+library(proxyC)
+```
+
+ProxyC has a useful function - simil() - which calculates similarity for you. All you have to do is specify your data and the method you want to use for measuring similarity. It has a lot of different methods, but we will use cosine, which is often used in text analysis.
+
+Cosine measures the angle between the texts where the words are the different dimensions. Below is an example for two dimensions. This is an intuitive measure of similarity - where values close to 1 signify that two vectors (i.e. the word distributions of two texts) are going in precisely the same direction, and values close to 0 signal that they are going in orthogonal directions (i.e. they are not similar at all).
+
+![Cosine similarity](Images/Distance measures_cosine.png){width=50%}
+
+```{r}
+# For the document-to-term matrix
+#margin =1 indicates that similarity is between rows
+cosine_dtm <- simil(dickens_dtm, margin=1, method = "cosine")
+cosine_dtm <- as.matrix(cosine_dtm)
+```
+
+We now have a book-by-book matrix (74x74) and the values in the cells give the cosine similarity. If you'd like to analyse this further, you can import it into igraph and analyse it as a network. You can apply multidimensional scaling (if you first transform it to a distance matrix). You can cluster it with hierarchical cluster analysis, etc. The point is that we have been able -- in only a few lines of code -- to transform a relatively large corpus of 500.000 words to a manageable-sized matrix that indicates which books are similar to which books using their whole content. 
+
+### Network analysis of Dicken's corpus
+Just to round off this part, let's plot the results as networks. To do so, we need igraph.
+```{r}
+#install.packages("igraph")
+library(igraph)
+```
+
+To make the network somewhat clearer, we will filter the similarity matrix so that it only contains values which are in the top 5% of the cosine distribution, and use that as a cut-off point. For reference, here is the distribution for the document-to-term matrix. 
+```{r}
+hist(cosine_dtm)
+```
+
+We use indexing to filter the matrix. First, we identify values which are less than the 0.95 percentile of the distribution. Then we use that logical value to index the matrix and set those values to zero. We set all other values to 1. Finally, we set the diagonal to zero too. In many cases, it may be necessary to set an even more stringent cut-off.
+
+```{r}
+low_values_dtm <- cosine_dtm < quantile(cosine_dtm, 0.95, na.rm = T)
+cosine_dtm[low_values_dtm] <- 0
+cosine_dtm[cosine_dtm>0] <- 1
+diag(cosine_dtm) <- 0
+```
+
+Now let's use igraph to graph the resulting matrices as a network.
+We use graph.adjacency to graph the matrix. We set the mode to undirected since the matrix is symmetrical.
+
+```{r}
+cosine_net_dtm <- graph_from_adjacency_matrix(cosine_dtm, mode = "undirected")
+cosine_net_dtm
+```
+
+We drop nodes which are disconnected from the main graph.
+```{r}
+comps <- components(cosine_net_dtm)$membership
+largest_component <- which.max(table(comps))
+cosine_net_dtm <- delete.vertices(cosine_net_dtm, which(comps != largest_component))
+cosine_net_dtm
+```
+To detect communities we can use the Girvan-Newman algorithm of week 2. 
+```{r}
+community <- cluster_edge_betweenness(cosine_net_dtm)
+```
+And plot the network. 
+
+```{r}
+plot(cosine_net_dtm, 
+     vertex.size = 5,
+     mark.groups = cluster_edge_betweenness(cosine_net_dtm), 
+     vertex.color = "grey80",
+     vertex.border.color = "grey60",
+     vertex.label.cex = 0.5,
+     vertex.label.color = "black")
+```
+
+## Topic Modeling 
+
+The process described above basically compared a set of documents on their whole row profile of words used in those texts. Using topic modeling, we could potentially transform our document-to-term matrix into a matrix of documents-to-topics wherein the terms have been aggregated into higher-level topics (just as in manual coding). This could be achieved using topic modeling.   
+
+Latent Dirichlet Allocation is one of the most common algorithms for topic modeling. Without diving into the math behind the model, we can understand it as being guided by two principles.
+
+First, every document is a mixture of topics. We imagine that each document may contain words from several topics in particular proportions. For example, in a two-topic model we could say “Document 1 is 90% topic A and 10% topic B, while Document 2 is 30% topic A and 70% topic B.”
+
+Second, every topic is a mixture of words. For example, we could imagine a two-topic model of American news, with one topic for “politics” and one for “entertainment.” The most common words in the politics topic might be “President”, “Congress”, and “government”, while the entertainment topic may be made up of words such as “movies”, “television”, and “actor”. Importantly, words can be shared between topics; a word like “budget” might appear in both equally.
+
+LDA is a mathematical method for estimating both of these at the same time: finding the mixture of words that is associated with each topic, while also determining the mixture of topics that describes each document. 
+
+In R we can use the topicmodels package to do LDA topic modeling. Quanteda is a general package for quantitative text analysis. The topicmodels package contains a dataset of Associated Press articles. This is a collection of 2246 news articles from an American news agency, mostly published around 1988. 
+```{r}
+#install.packages("topicmodels")
+#install.packages("quanteda")
 library(topicmodels)
 library(quanteda)
 #the package contains a dataset of Associated Press articles
 data("AssociatedPress")
+AssociatedPress
 ```
 
-we have to set k to the requested number of topics
-set a seed so that the output of the model is predictable
+We have to set k to the requested number of topics. This is mostly a judgement call and people generally experiment with multiple options. We set a seed so that the output of the model is predictable.
 
 ```{r}
 AP_topic_model <- LDA(AssociatedPress, k = 10, control = list(seed = 1234))
 AP_topic_model
 #get the 20 terms that are most associated with the topics
 terms(AP_topic_model, 20)
-#get the most likely topics for each document
-t(topics(AP_topic_model, 2))
+#get the most likely topics for the first 5 documents
+t(topics(AP_topic_model,2))[1:5,]
 ```
 
-We can use tidyverse to produce nicer graphics. 
-See the book Text Mining with R for further information and code.
+### Word-topic probabilities
+We can use the tidy data to produce nicer graphics. We will extract the matrix which lists the word probabilities ("beta) per topic. 
 
 ```{r}
-install.packages("tidytext")
 library(tidytext)
-library(dplyr)
-library(ggplot2)
-```
-
-
-Beta refers to the word probabilities per topic
-
-```{r}
 AP_topics <- tidy(AP_topic_model, matrix = "beta")
+head(AP_topics,20)#each word has 10 entries (1 per topic) and beta indicates its probability that it belongs to that topic.
 ap_top_terms <- 
   AP_topics %>%
   group_by(topic) %>%
-  top_n(10, beta) %>%
+  slice_max(beta, n=10) %>%
   ungroup() %>%
   arrange(topic, -beta)
+
 ap_top_terms %>%
-  mutate(term = reorder(term, beta)) %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
   ggplot(aes(term, beta, fill = factor(topic))) +
   geom_col(show.legend = FALSE) +
   facet_wrap(~ topic, scales = "free") +
   coord_flip()
 ```
 
-Gamma refers to the topic probabilities per document
+### Document-topic probabilities
 
+We can also examine the topic probabilities per document (which is called "gamma"). 
 ```{r}
 ap_documents <- tidy(AP_topic_model, matrix = "gamma")
-ap_documents
+head(ap_documents,20)
+```
 
+We can have a look at a particular document. Let's say 6. 
+```{r}
+ap_documents %>% filter(document == 6)
+```
+It seems to have the highest probability (63%) to belong to topic 2. Which seemed to be a political topic. We can go back to the original text and have a look at the most used terms in this document. 
+
+```{r}
 tidy(AssociatedPress) %>%
   filter(document == 6) %>%
   arrange(desc(count))
 ```
+Based on the most common words, this appears to be an article about the relationship between the American government and Panamanian dictator Manuel Noriega, which means the algorithm was right to place it in topic 2 (as political/national news).
 
-#Structural Topic Modeling, or STM. 
-
-STM is very similar to LDA, but it employs meta data about documents (such as the name of the author or the date in which the document was produced) to improve the assignment of words to latent topics in a corpus.
-
-We import 13246 blog posts 
+### Making a document-to-topic matrix
+So let's say that we have found a topic solution that makes sense. Per document we would then have a probability distribution over those topics. You can again think of this as a two-mode matrix, whereby the rows are the documents and the columns are the topics, and the values in the cells are the probability distributions of the topics over that document. It is quite easy to make this into a matrix using the spread function. 
 
 ```{r}
-google_doc_id <- "1LcX-JnpGB0lU1iDnXnxB6WFqBywUKpew" # google file ID
-poliblogs<-read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", google_doc_id), stringsAsFactors = FALSE)
-
+dtt_documents_wide <- tidyr::spread(ap_documents,topic,gamma)
+head(dtt_documents_wide)
 ```
-
-
-The `textProcessor` function in STM automatically removes a) punctuation; b) stop words; c) numbers, and d) stems each word.
-
-```{r}
-#install.packages("stm")
-library(stm)
-processed <- textProcessor(poliblogs$documents, metadata = poliblogs)
-```
-
-The `stm` package  requires us to store the documents, meta data, and "vocab"---or total list of words described in the documents---in separate objects (see code below). The first line of code eliminates both extremely common terms and extremely rare terms, as is common practice in topic modeling, since such terms make word-topic assignment much more difficult.
-
-```{r}
-out <- prepDocuments(processed$documents, processed$vocab, processed$meta)
-docs <- out$documents
-vocab <- out$vocab
-meta <-out$meta
-```
-
-Before we run our first model, we have to make another decision about the number of topics we might expect to find in the corpus. Let's start out with 10. 
-We also need to specify how we want to use the meta data. This model uses both the "rating" variable (that describes whether the blog is liberal or conservative) as well as the day or date variable to improve topic classification.
-
-```{r}
-First_STM <- stm(documents = out$documents, vocab = out$vocab,
-                 K = 10, prevalence =~ rating + s(day) ,
-                 max.em.its = 75, data = out$meta,
-                 init.type = "Spectral", verbose = FALSE)
-
-```
-
-inspect our results by browsing the top words associated with each topic
-
-```{r}
-plot(First_STM)
-```
-
-The `stm` package has another useful function called `findThoughts` which extracts passages from documents within the corpus that load high on topics specified by the user.
-
-```{r}
-findThoughts(First_STM, texts = poliblogs$documents,
-             n = 1, topics = 3)
-```
-
-The `stm` package has a useful function called `searchK` which allows the user to specify a range of values for `k`, runs STM models for each value of 'k', and then outputs multiple goodness-of-fit measures that are very useful in identifying a range of values of `k` that provide the best fit for the data. The syntax of this function is very similar to the `stm` function, except that the user specifies a range for `k` as one of the arguments. In the code below, we search all values of `k` between 7 and 10.
-
-```{r}
-findingk <- searchK(out$documents, out$vocab, K = c(7:10),
-                    prevalence =~ rating + s(day), data = meta, verbose=FALSE)
-plot(findingk)
-```
-
-One of the principal advantages of STM is that one can examine the relationship between topics and various covariates of interest. 
-Here we use the `estimateEffect` function to examine the relationship between the liberal/conservative `rating` variable and the first 10 topics, as well as time (`day`).
-
-```{r}
-predict_topics<-estimateEffect(formula = 1:10 ~ rating + s(day), stmobj = First_STM, metadata = out$meta, uncertainty = "Global")
-```
-
-Once we have the model, we can plot the relationships. The code below picks three topics and plots them according to their association with the liberal/conservative `rating` variable.
-
-```{r}
-plot(predict_topics, covariate = "rating", topics = c(3, 5, 9),
-     model = First_STM, method = "difference",
-     cov.value1 = "Liberal", cov.value2 = "Conservative",
-     xlab = "More Conservative ... More Liberal",
-     main = "Effect of Liberal vs. Conservative",
-     xlim = c(-.1, .1), labeltype = "custom",
-     custom.labels = c('Topic 3', 'Topic 5','Topic 9'))
-
-```
-
-We can also plot change in the prevalence of topic over time. The code below plots change in the prevalence of topic 3.
-
-```{r}
-plot(predict_topics, "day", method = "continuous", topics = 3,
-     model = z, printlegend = FALSE, xaxt = "n", xlab = "Time (2008)")
-monthseq <- seq(from = as.Date("2008-01-01"),
-                to = as.Date("2008-12-01"), by = "month")
-monthnames <- months(monthseq)
-axis(1,at = as.numeric(monthseq) - min(as.numeric(monthseq)),
-     labels = monthnames)
-```
+We will try to see how this might be useful...
 
 
 
 
-## Cosine similarity
 
-![Cosine similarity](Images/Distance measures_cosine.png){width=50%}
-
-
-```{r}
-#negative correlation becomes positive when adding zeros
-author_a <- c(NA,4,2,3,9,10)
-author_b <- c(4,NA,8,9,2,5)
-author_matrix <- rbind(author_a,author_b)
-cor(t(author_matrix),use="complete.obs")
-cor(author_a,author_b,use="complete.obs")
-
-author_a <- c(NA,4,2,3,9,10,0,0,0,0)
-author_b <- c(4,NA,8,9,2,5,0,0,0,0)
-author_matrix <- rbind(author_a,author_b)
-cor(t(author_matrix),use="complete.obs")
-cor(author_a,author_b,use="complete.obs")
-
-#perfect correlation goes away when adding zeros
-author_a <- c(NA,7,1,2,3,4)
-author_b <- c(7,NA,10,11,12,13)
-author_matrix <- rbind(author_a,author_b)
-cor(t(author_matrix),use="complete.obs")
-cor(author_a,author_b,use="complete.obs")
-
-author_a <- c(NA,7,1,2,3,4,0,0,0,0)
-author_b <- c(7,NA,10,11,12,13,0,0,0,0)
-author_matrix <- rbind(author_a,author_b)
-cor(t(author_matrix),use="complete.obs")
-cor(author_a,author_b,use="complete.obs")
-
-library(lsa)
-author_a <- c(0,7,1,2,3,4,0,0,0,0)
-author_b <- c(7,0,10,11,12,13,0,0,0,0)
-cosine(author_a,author_b)
-cosine(s1,s2)
-cor(author_a,author_b,use="complete.obs")
-
-my_example=matrix(c(0,0,1,0,0,0,1,0,1,1,0,0,0,1,1,1,1,1,0,1,1,0,1,0,0,0,0,1,0,0,1,0,0,0,1,1,0,0,0,0,0,1,1,1,1,0,0,0,1,0,0,0,1,0,0,0,1,1,1,0,0,0,1,1,1,1,0,0,0,1,0,1,0,0,0,0,1,0,1,1,1,0,0,1,0,1,0,0,0,0,1), ncol=7,nrow=13)
-my_example
-my_example_dist <- round(as.matrix(dist(my_example,method="binary",diag=TRUE)),digits=2)
-```
