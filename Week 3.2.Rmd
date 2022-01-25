@@ -1,0 +1,308 @@
+---
+title: "Measuring Meaning in Mixed Methods - Week 3"
+output:
+  github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Week 3 Session 2
+Topics: 
+- Working with unstructured text
+- Topic modeling
+- (Word embedding) 
+
+## Text as data
+The exemplary studies we've read in this course until now in most cases relied on manual coding of text. The coding mostly proceeded by looking at the formal structure of the texts, whether they contained some "format" which could be used to extract units in a meaningful way. So in the directories of welfare organizations, the author discovered a that most texts contained two types of elements (identities and practices); in the analysis of the Nazi biography, the authors looked to the text as a sequence of (types of) events; and in the analysis of music reviews, these texts seemed to almost always contain a statement about genre classification and the use of evaluative criteria. After the identification of this "format", the coding could proceed in an inductive way and at a low level of abstraction. Yet although the coding stayed as close as possible to the actual text, in most cases it still required quite intensive manual coding and was therefore quite time-consuming. Given the enormous growth of the number of documents available in archives and repositories in recent years, and the costs of coding large corpora, social scientists have increasingly looked at ways to avoid manual coding of unstructured text yet still extract meaningful information from textual data. Although (semi-)automatic coding of textual material is a theme that far extends what we can discuss in one session, we will focus on some basic tools in R that can help you work with large corpora of unstructured text and apply some of the techniques for measuring meaning (such as network analysis, multidimensional scaling and correspondence analysis) to your own textual data. We will also introduce one machine learning tool that can help code your material automatically: topic modeling.
+
+## Get the text
+There are many textual resources available for research out there. I have already pointed you to some of the digitized sources that were used by some of the authors that we read in this course. The documents used by Mohr are for example available on Hathitrust (https://catalog.hathitrust.org/Record/008955610). The Nazi biographies analyzed by Bearman and Stovel at the Hoover institute: https://digitalcollections.hoover.org/objects/58492 Other large textual archives are Lexis-Nexis, Proquest, Jstor and many others. Of course, the internet itself also is a giant repository of text, as well as social media such as Twitter. Depending on your research domain you would generally have to learn the appropriate technique to quickly download the data you're interested in (such as screenscraping, working with an API, or in the case of historical documents that often come in the form of PDF documents how to do make them machine-readable using optical character recognition). There are many sources out there that you could consult. For the purpose of this short illustrative tutorial, we will start with some data from the Gutenberg project, an online library of more than 60,000 public domain books. 
+  
+ 
+
+## The term-document matrix
+Topic modeling, as well as other machine learning based tools, work with texts in the form of term-document (or document-term) matrix. This is a matrix where each word is a row and each colum is a document (or vice versa). The number within each cell describes the number of times the word appears in the document. Many of the most popular forms of text analysis, such as topic models, require a document term matrix. In the vocabulary of this course, this would be a two-mode matrix. 
+
+When we work with a text corpus, one of the earliest steps would be to create this word-document matrix. It would also involve pre-processing such as removing certain words that have no intrisinc meaning (such as stopwords -- a, the, and, for, etc.), removing punctuation, numbers, making all words lower case, and possibly word stemming, which means reducing words to their basic form (for example, typing -> type; walked -> walk). 
+
+Another common step in constructing a term-document matrix is weighting the words by their Term-Frequency and Inverse Document Frequency (TF/IDF). TF  gives stronger weight to words in a document that more frequently occur in a particular document (so across columns in a word-document matrix). While IDF decreases the weight of words that occur often in all the documents (so across rows in a word-document matrix). TF is calculated by dividing the number of times a word appears in a document by the total number of words in that document. TF increases the more important that word is for that document. IDF is calculated by taking the log of the total number of document in a corpus divided by the number of documents in which a word appears. IDF becomes larger the less often the word appears in the corpus. We then multiply TF*IDF. This means that we have given greater weight to words that are highly characteristic for that document. 
+
+
+#Topic Modeling using Latent Semantic Analysis
+
+```{r}
+#We construct the example matrix
+human <- c(1,0,0,1,0,0,0,0,0)
+interface <- c(1,0,1,0,0,0,0,0,0)
+computer <- c(1,1,0,0,0,0,0,0,0)
+user <- c(0,1,1,0,1,0,0,0,0)
+system <- c(0,1,1,2,0,0,0,0,0)
+response <- c(0,1,0,0,1,0,0,0,0)
+time <- c(0,1,0,0,1,0,0,0,0)
+EPS <- c(0,0,1,1,0,0,0,0,0)
+survey <- c(0,1,0,0,0,0,0,0,1)
+trees <- c(0,0,0,0,0,1,1,1,0)
+graph <- c(0,0,0,0,0,0,1,1,1)
+minor <- c(0,0,0,0,0,0,0,1,1)
+X <- rbind(human,interface,computer,user,system,response,time,EPS,survey,trees,graph,minor)
+colnames(X) <- c("c1","c2","c3","c4","c5","m1","m2","m3","m4")
+print(X)
+```
+
+Measure the intial correlation between several rows
+
+```{r}
+cor(human,user, method="spearman")
+cor(human,minor, method="spearman")
+```
+
+Do the singular value decomposition on the X matrix
+
+```{r}
+SVD <- svd(X)
+print(SVD)
+rownames(SVD$u) = rownames(X) 
+rownames(SVD$v) = colnames(X)
+u <- as.matrix(SVD$u)
+v <- as.matrix(SVD$v)
+d <- SVD$d
+```
+
+We can set all but the first two singular values to zero. this means that r=2
+
+```{r}
+d[3:9] <- 0
+d_r <- as.matrix(diag(d))
+print(d_r)
+```
+
+We put the matrix back together but now with only keeping the first two singular values.
+
+```{r}
+X_r <- u %*% d_r %*% t(v)
+print(round(X_r,2))
+```
+
+We measure the correlations among the rows(=the words)
+
+```{r}
+cor(t(X_r), method="pearson")
+cor(t(X_r), method="spearman")
+```
+
+We measure the correlations among the columns(=the documents)
+
+```{r}
+cor(X,method="pearson")
+cor((X_r), method="pearson")
+```
+
+The differences between the different topics should now be more clearly defined.
+
+#Topic Modeling using Latent Dirichlet Allocation
+
+#We will use the topicmodels package
+
+```{r}
+install.packages("topicmodels")
+install.packages("quanteda")
+library(topicmodels)
+library(quanteda)
+#the package contains a dataset of Associated Press articles
+data("AssociatedPress")
+```
+
+we have to set k to the requested number of topics
+set a seed so that the output of the model is predictable
+
+```{r}
+AP_topic_model <- LDA(AssociatedPress, k = 10, control = list(seed = 1234))
+AP_topic_model
+#get the 20 terms that are most associated with the topics
+terms(AP_topic_model, 20)
+#get the most likely topics for each document
+t(topics(AP_topic_model, 2))
+```
+
+We can use tidyverse to produce nicer graphics. 
+See the book Text Mining with R for further information and code.
+
+```{r}
+install.packages("tidytext")
+library(tidytext)
+library(dplyr)
+library(ggplot2)
+```
+
+
+Beta refers to the word probabilities per topic
+
+```{r}
+AP_topics <- tidy(AP_topic_model, matrix = "beta")
+ap_top_terms <- 
+  AP_topics %>%
+  group_by(topic) %>%
+  top_n(10, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+ap_top_terms %>%
+  mutate(term = reorder(term, beta)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip()
+```
+
+Gamma refers to the topic probabilities per document
+
+```{r}
+ap_documents <- tidy(AP_topic_model, matrix = "gamma")
+ap_documents
+
+tidy(AssociatedPress) %>%
+  filter(document == 6) %>%
+  arrange(desc(count))
+```
+
+#Structural Topic Modeling, or STM. 
+
+STM is very similar to LDA, but it employs meta data about documents (such as the name of the author or the date in which the document was produced) to improve the assignment of words to latent topics in a corpus.
+
+We import 13246 blog posts 
+
+```{r}
+google_doc_id <- "1LcX-JnpGB0lU1iDnXnxB6WFqBywUKpew" # google file ID
+poliblogs<-read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", google_doc_id), stringsAsFactors = FALSE)
+
+```
+
+
+The `textProcessor` function in STM automatically removes a) punctuation; b) stop words; c) numbers, and d) stems each word.
+
+```{r}
+#install.packages("stm")
+library(stm)
+processed <- textProcessor(poliblogs$documents, metadata = poliblogs)
+```
+
+The `stm` package  requires us to store the documents, meta data, and "vocab"---or total list of words described in the documents---in separate objects (see code below). The first line of code eliminates both extremely common terms and extremely rare terms, as is common practice in topic modeling, since such terms make word-topic assignment much more difficult.
+
+```{r}
+out <- prepDocuments(processed$documents, processed$vocab, processed$meta)
+docs <- out$documents
+vocab <- out$vocab
+meta <-out$meta
+```
+
+Before we run our first model, we have to make another decision about the number of topics we might expect to find in the corpus. Let's start out with 10. 
+We also need to specify how we want to use the meta data. This model uses both the "rating" variable (that describes whether the blog is liberal or conservative) as well as the day or date variable to improve topic classification.
+
+```{r}
+First_STM <- stm(documents = out$documents, vocab = out$vocab,
+                 K = 10, prevalence =~ rating + s(day) ,
+                 max.em.its = 75, data = out$meta,
+                 init.type = "Spectral", verbose = FALSE)
+
+```
+
+inspect our results by browsing the top words associated with each topic
+
+```{r}
+plot(First_STM)
+```
+
+The `stm` package has another useful function called `findThoughts` which extracts passages from documents within the corpus that load high on topics specified by the user.
+
+```{r}
+findThoughts(First_STM, texts = poliblogs$documents,
+             n = 1, topics = 3)
+```
+
+The `stm` package has a useful function called `searchK` which allows the user to specify a range of values for `k`, runs STM models for each value of 'k', and then outputs multiple goodness-of-fit measures that are very useful in identifying a range of values of `k` that provide the best fit for the data. The syntax of this function is very similar to the `stm` function, except that the user specifies a range for `k` as one of the arguments. In the code below, we search all values of `k` between 7 and 10.
+
+```{r}
+findingk <- searchK(out$documents, out$vocab, K = c(7:10),
+                    prevalence =~ rating + s(day), data = meta, verbose=FALSE)
+plot(findingk)
+```
+
+One of the principal advantages of STM is that one can examine the relationship between topics and various covariates of interest. 
+Here we use the `estimateEffect` function to examine the relationship between the liberal/conservative `rating` variable and the first 10 topics, as well as time (`day`).
+
+```{r}
+predict_topics<-estimateEffect(formula = 1:10 ~ rating + s(day), stmobj = First_STM, metadata = out$meta, uncertainty = "Global")
+```
+
+Once we have the model, we can plot the relationships. The code below picks three topics and plots them according to their association with the liberal/conservative `rating` variable.
+
+```{r}
+plot(predict_topics, covariate = "rating", topics = c(3, 5, 9),
+     model = First_STM, method = "difference",
+     cov.value1 = "Liberal", cov.value2 = "Conservative",
+     xlab = "More Conservative ... More Liberal",
+     main = "Effect of Liberal vs. Conservative",
+     xlim = c(-.1, .1), labeltype = "custom",
+     custom.labels = c('Topic 3', 'Topic 5','Topic 9'))
+
+```
+
+We can also plot change in the prevalence of topic over time. The code below plots change in the prevalence of topic 3.
+
+```{r}
+plot(predict_topics, "day", method = "continuous", topics = 3,
+     model = z, printlegend = FALSE, xaxt = "n", xlab = "Time (2008)")
+monthseq <- seq(from = as.Date("2008-01-01"),
+                to = as.Date("2008-12-01"), by = "month")
+monthnames <- months(monthseq)
+axis(1,at = as.numeric(monthseq) - min(as.numeric(monthseq)),
+     labels = monthnames)
+```
+
+
+
+
+## Cosine similarity
+
+![Cosine similarity](Images/Distance measures_cosine.png){width=50%}
+
+
+```{r}
+#negative correlation becomes positive when adding zeros
+author_a <- c(NA,4,2,3,9,10)
+author_b <- c(4,NA,8,9,2,5)
+author_matrix <- rbind(author_a,author_b)
+cor(t(author_matrix),use="complete.obs")
+cor(author_a,author_b,use="complete.obs")
+
+author_a <- c(NA,4,2,3,9,10,0,0,0,0)
+author_b <- c(4,NA,8,9,2,5,0,0,0,0)
+author_matrix <- rbind(author_a,author_b)
+cor(t(author_matrix),use="complete.obs")
+cor(author_a,author_b,use="complete.obs")
+
+#perfect correlation goes away when adding zeros
+author_a <- c(NA,7,1,2,3,4)
+author_b <- c(7,NA,10,11,12,13)
+author_matrix <- rbind(author_a,author_b)
+cor(t(author_matrix),use="complete.obs")
+cor(author_a,author_b,use="complete.obs")
+
+author_a <- c(NA,7,1,2,3,4,0,0,0,0)
+author_b <- c(7,NA,10,11,12,13,0,0,0,0)
+author_matrix <- rbind(author_a,author_b)
+cor(t(author_matrix),use="complete.obs")
+cor(author_a,author_b,use="complete.obs")
+
+library(lsa)
+author_a <- c(0,7,1,2,3,4,0,0,0,0)
+author_b <- c(7,0,10,11,12,13,0,0,0,0)
+cosine(author_a,author_b)
+cosine(s1,s2)
+cor(author_a,author_b,use="complete.obs")
+
+my_example=matrix(c(0,0,1,0,0,0,1,0,1,1,0,0,0,1,1,1,1,1,0,1,1,0,1,0,0,0,0,1,0,0,1,0,0,0,1,1,0,0,0,0,0,1,1,1,1,0,0,0,1,0,0,0,1,0,0,0,1,1,1,0,0,0,1,1,1,1,0,0,0,1,0,1,0,0,0,0,1,0,1,1,1,0,0,1,0,1,0,0,0,0,1), ncol=7,nrow=13)
+my_example
+my_example_dist <- round(as.matrix(dist(my_example,method="binary",diag=TRUE)),digits=2)
+```
