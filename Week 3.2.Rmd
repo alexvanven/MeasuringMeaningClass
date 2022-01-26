@@ -9,9 +9,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Week 3 Session 2
-Topics: 
-- Working with unstructured text
-- Topic modeling
+Topics:  
+- Working with unstructured text  
+- Topic modeling  
 
 ## Text as data
 The studies that we've read in this course so far mostly relied on some form of manual coding of text. This coding generally proceeded by looking at the formal structure of the texts, whether they contained some "format" which could be used to extract units in a meaningful way. So in the directories of welfare organizations, the author discovered that most texts contained two types of elements (identities and practices); in the analysis of the Nazi biography, the authors looked to the text as a sequence of (types of) events; and in the analysis of music reviews, these texts seemed to almost always contain a statement about genre classification and the use of evaluative criteria. After the identification of this "format", the coding could proceed in an inductive way and at a low level of abstraction. It allowed for a very fine-grained reading of texts. Yet although the coding stayed as close as possible to the actual text, in most cases the projects still required quite intensive manual coding and were quite time-consuming. We have therefore been working with the end-products of those coding efforts -- the matrices -- and looked at techniques that can analyze those matrices. 
@@ -134,7 +134,7 @@ Again, we download Dickens' texts with gutenberg_download(), just like before. T
 #dickens_texts <- gutenberg_download(dickens_books$gutenberg_id, meta_fields = "title", mirror = "http://gutenberg.readingroo.ms/")
 ```
 
-```{r echo = F}
+```{r}
 dickens_texts <- readRDS("Data/dickens_texts.RDS")
 ```
 

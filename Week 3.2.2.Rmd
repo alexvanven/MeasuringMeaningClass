@@ -1,0 +1,85 @@
+---
+title: "Measuring Meaning in Mixed Methods - Week 3"
+output:
+  github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Topic Modeling using Latent Semantic Analysis
+
+```{r}
+#We construct the example matrix
+human <- c(1,0,0,1,0,0,0,0,0)
+interface <- c(1,0,1,0,0,0,0,0,0)
+computer <- c(1,1,0,0,0,0,0,0,0)
+user <- c(0,1,1,0,1,0,0,0,0)
+system <- c(0,1,1,2,0,0,0,0,0)
+response <- c(0,1,0,0,1,0,0,0,0)
+time <- c(0,1,0,0,1,0,0,0,0)
+EPS <- c(0,0,1,1,0,0,0,0,0)
+survey <- c(0,1,0,0,0,0,0,0,1)
+trees <- c(0,0,0,0,0,1,1,1,0)
+graph <- c(0,0,0,0,0,0,1,1,1)
+minor <- c(0,0,0,0,0,0,0,1,1)
+X <- rbind(human,interface,computer,user,system,response,time,EPS,survey,trees,graph,minor)
+colnames(X) <- c("c1","c2","c3","c4","c5","m1","m2","m3","m4")
+print(X)
+```
+
+Measure the intial correlation between several rows
+
+```{r}
+cor(human,user, method="spearman")
+cor(human,minor, method="spearman")
+```
+
+Do the singular value decomposition on the X matrix
+
+```{r}
+SVD <- svd(X)
+print(SVD)
+rownames(SVD$u) = rownames(X) 
+rownames(SVD$v) = colnames(X)
+u <- as.matrix(SVD$u)
+v <- as.matrix(SVD$v)
+d <- SVD$d
+```
+
+We can set all but the first two singular values to zero. this means that r=2
+
+```{r}
+d[3:9] <- 0
+d_r <- as.matrix(diag(d))
+print(d_r)
+```
+
+We put the matrix back together but now with only keeping the first two singular values.
+
+```{r}
+X_r <- u %*% d_r %*% t(v)
+print(round(X_r,2))
+```
+
+We measure the correlations among the rows(=the words)
+
+```{r}
+cor(t(X_r), method="pearson")
+cor(t(X_r), method="spearman")
+```
+
+We measure the correlations among the columns(=the documents)
+
+```{r}
+cor(X,method="pearson")
+cor((X_r), method="pearson")
+```
+
+The differences between the different topics should now be more clearly defined.
+
+
+
+
+

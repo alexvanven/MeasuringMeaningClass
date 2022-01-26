@@ -276,7 +276,7 @@ Eigenvalues are singular values squared.
 eigenvalues = SVD$d^2
 ```
 
-We calculate the proportion of the singular values to the total which indicated the explained variance per dimension
+We calculate the proportion of the eigenvalues to the total which indicates the explained variance per dimension.
 
 ```{r}
 prop <- prop.table(eigenvalues)
